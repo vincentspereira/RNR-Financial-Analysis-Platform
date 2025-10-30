@@ -1,0 +1,25 @@
+{
+  "python.defaultInterpreterPath": "./venv/Scripts/python.exe",
+  "python.formatting.provider": "black",
+  "python.linting.enabled": true,
+  "python.linting.flake8Enabled": true,
+  "python.linting.mypyEnabled": false,
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": true
+  },
+  "typescript.preferences.importModuleSpecifier": "relative",
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/*.pyc": true,
+    "**/node_modules": true,
+    "**/venv": true
+  },
+  "python.testing.pytestEnabled": true,
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestArgs": [
+    "backend"
+  ],
+  "eslint.workingDirectories": ["frontend"],
+  "typescript.preferences.importModuleSpecifier": "relative"
+}

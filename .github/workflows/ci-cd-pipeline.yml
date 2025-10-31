@@ -1,0 +1,1092 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  release:
+    types: [ published ]
+
+env:
+  NODE_VERSION: '18'
+  PYTHON_VERSION: '3.11'
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # Code Quality and Security Checks
+  code-quality:
+    name: Code Quality & Security
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      # Backend Code Quality
+      - name: Install Python dependencies
+        run: |
+          cd backend
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Run Python linting
+        run: |
+          cd backend
+          flake8 app/ --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 app/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+      - name: Run Python type checking
+        run: |
+          cd backend
+          mypy app/
+
+      - name: Run Python security scan
+        run: |
+          cd backend
+          bandit -r app/ -f json -o bandit-report.json || true
+          safety check --json --output safety-report.json || true
+
+      # Frontend Code Quality
+      - name: Install frontend dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Run frontend linting
+        run: |
+          cd frontend
+          npm run lint
+
+      - name: Run frontend type checking
+        run: |
+          cd frontend
+          npm run type-check
+
+      - name: Check frontend formatting
+        run: |
+          cd frontend
+          npm run format:check
+
+      # Security Scanning
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # Backend Tests
+  backend-tests:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+
+      - name: Run unit tests
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+          REDIS_URL: redis://localhost:6379/0
+          SECRET_KEY: test-secret-key-for-ci
+        run: |
+          cd backend
+          pytest tests/unit/ -v --cov=app --cov-report=xml --cov-report=html
+
+      - name: Run integration tests
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+          REDIS_URL: redis://localhost:6379/0
+          SECRET_KEY: test-secret-key-for-ci
+        run: |
+          cd backend
+          pytest integration_tests/ -v
+
+      - name: Run security tests
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+          REDIS_URL: redis://localhost:6379/0
+          SECRET_KEY: test-secret-key-for-ci
+        run: |
+          cd backend
+          pytest security_tests/ -v
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./backend/coverage.xml
+          flags: backend
+          name: backend-coverage
+
+  # Frontend Tests
+  frontend-tests:
+    name: Frontend Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Run unit tests
+        run: |
+          cd frontend
+          npm run test:coverage
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./frontend/coverage/coverage-final.json
+          flags: frontend
+          name: frontend-coverage
+
+  # Performance Tests
+  performance-tests:
+    name: Performance Tests
+    runs-on: ubuntu-latest
+    needs: [backend-tests]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+
+      - name: Run performance tests
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+          REDIS_URL: redis://localhost:6379/0
+          SECRET_KEY: test-secret-key-for-ci
+        run: |
+          cd backend
+          pytest performance_tests/ -v --benchmark-json=benchmark.json
+
+      - name: Store benchmark result
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          tool: 'pytest'
+          output-file-path: backend/benchmark.json
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          auto-push: true
+
+  # Build and Push Docker Images
+  build-images:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    needs: [code-quality, backend-tests, frontend-tests]
+    if: github.event_name == 'push'
+    outputs:
+      backend-image: ${{ steps.backend-meta.outputs.tags }}
+      frontend-image: ${{ steps.frontend-meta.outputs.tags }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Backend Image
+      - name: Extract backend metadata
+        id: backend-meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: ${{ steps.backend-meta.outputs.tags }}
+          labels: ${{ steps.backend-meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Frontend Image
+      - name: Extract frontend metadata
+        id: frontend-meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: true
+          tags: ${{ steps.frontend-meta.outputs.tags }}
+          labels: ${{ steps.frontend-meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # Deploy to Staging
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [build-images]
+    if: github.ref == 'refs/heads/develop'
+    environment:
+      name: staging
+      url: https://staging.financial-analysis-platform.com
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'v1.28.0'
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig --region us-east-1 --name financial-platform-staging
+
+      - name: Deploy database migrations
+        run: |
+          echo "Running database migrations..."
+          kubectl create job --from=cronjob/db-migration migration-$(date +%s) -n staging
+          kubectl wait --for=condition=complete --timeout=300s job/migration-$(date +%s) -n staging
+
+      - name: Deploy backend to staging
+        run: |
+          echo "Deploying backend to staging..."
+          envsubst < infrastructure/kubernetes/staging/backend-deployment.yaml | kubectl apply -f -
+          kubectl set image deployment/backend-deployment backend=${{ needs.build-images.outputs.backend-image }} -n staging
+          kubectl rollout status deployment/backend-deployment -n staging --timeout=300s
+
+      - name: Deploy frontend to staging
+        run: |
+          echo "Deploying frontend to staging..."
+          envsubst < infrastructure/kubernetes/staging/frontend-deployment.yaml | kubectl apply -f -
+          kubectl set image deployment/frontend-deployment frontend=${{ needs.build-images.outputs.frontend-image }} -n staging
+          kubectl rollout status deployment/frontend-deployment -n staging --timeout=300s
+
+      - name: Update ingress and services
+        run: |
+          kubectl apply -f infrastructure/kubernetes/staging/ingress.yaml -n staging
+          kubectl apply -f infrastructure/kubernetes/staging/services.yaml -n staging
+
+      - name: Wait for deployment to be ready
+        run: |
+          echo "Waiting for deployment to be ready..."
+          kubectl wait --for=condition=available --timeout=300s deployment/backend-deployment -n staging
+          kubectl wait --for=condition=available --timeout=300s deployment/frontend-deployment -n staging
+
+      - name: Run smoke tests
+        run: |
+          echo "Running smoke tests against staging..."
+          # Health check
+          curl -f https://staging.financial-analysis-platform.com/api/v1/health || exit 1
+          
+          # API endpoint tests
+          curl -f https://staging.financial-analysis-platform.com/api/v1/monitoring/metrics || exit 1
+          
+          # Frontend availability
+          curl -f https://staging.financial-analysis-platform.com/ || exit 1
+          
+          echo "All smoke tests passed!"
+
+      - name: Run integration tests against staging
+        run: |
+          echo "Running integration tests against staging..."
+          cd backend
+          STAGING_API_URL=https://staging.financial-analysis-platform.com/api/v1 \
+          pytest integration_tests/test_staging_deployment.py -v
+
+      - name: Notify staging deployment
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          channel: '#deployments'
+          text: 'Staging deployment ${{ job.status }}: https://staging.financial-analysis-platform.com'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  # Deploy to Production
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [build-images, performance-tests, deploy-staging]
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: production
+      url: https://financial-analysis-platform.com
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'v1.28.0'
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig --region us-east-1 --name financial-platform-production
+
+      - name: Create backup before deployment
+        run: |
+          echo "Creating database backup..."
+          kubectl create job --from=cronjob/db-backup backup-$(date +%s) -n production
+          kubectl wait --for=condition=complete --timeout=600s job/backup-$(date +%s) -n production
+
+      - name: Blue-Green Deployment - Prepare Green Environment
+        run: |
+          echo "Preparing green environment..."
+          # Create green deployment
+          sed 's/app: backend/app: backend-green/g' infrastructure/kubernetes/production/backend-deployment.yaml | \
+          sed 's/name: backend-deployment/name: backend-deployment-green/g' | \
+          kubectl apply -f -
+          
+          sed 's/app: frontend/app: frontend-green/g' infrastructure/kubernetes/production/frontend-deployment.yaml | \
+          sed 's/name: frontend-deployment/name: frontend-deployment-green/g' | \
+          kubectl apply -f -
+
+      - name: Deploy to Green Environment
+        run: |
+          echo "Deploying to green environment..."
+          kubectl set image deployment/backend-deployment-green backend=${{ needs.build-images.outputs.backend-image }} -n production
+          kubectl set image deployment/frontend-deployment-green frontend=${{ needs.build-images.outputs.frontend-image }} -n production
+          
+          kubectl rollout status deployment/backend-deployment-green -n production --timeout=600s
+          kubectl rollout status deployment/frontend-deployment-green -n production --timeout=600s
+
+      - name: Run database migrations
+        run: |
+          echo "Running database migrations..."
+          kubectl create job --from=cronjob/db-migration migration-$(date +%s) -n production
+          kubectl wait --for=condition=complete --timeout=600s job/migration-$(date +%s) -n production
+
+      - name: Run comprehensive tests against Green
+        run: |
+          echo "Running comprehensive tests against green environment..."
+          # Get green service endpoint
+          GREEN_BACKEND_IP=$(kubectl get service backend-service-green -n production -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+          
+          # Health checks
+          curl -f http://$GREEN_BACKEND_IP/api/v1/health || exit 1
+          
+          # API functionality tests
+          cd backend
+          GREEN_API_URL=http://$GREEN_BACKEND_IP/api/v1 \
+          pytest integration_tests/test_production_deployment.py -v
+          
+          # Performance tests
+          GREEN_API_URL=http://$GREEN_BACKEND_IP/api/v1 \
+          pytest performance_tests/test_load_performance.py -v
+
+      - name: Switch Traffic to Green (Blue-Green Cutover)
+        run: |
+          echo "Switching traffic to green environment..."
+          # Update service selectors to point to green
+          kubectl patch service backend-service -n production -p '{"spec":{"selector":{"app":"backend-green"}}}'
+          kubectl patch service frontend-service -n production -p '{"spec":{"selector":{"app":"frontend-green"}}}'
+          
+          # Update ingress if needed
+          kubectl apply -f infrastructure/kubernetes/production/ingress.yaml -n production
+
+      - name: Monitor deployment health
+        run: |
+          echo "Monitoring deployment health for 5 minutes..."
+          for i in {1..30}; do
+            if curl -f https://financial-analysis-platform.com/api/v1/health; then
+              echo "Health check $i/30 passed"
+            else
+              echo "Health check $i/30 failed - initiating rollback"
+              # Rollback to blue
+              kubectl patch service backend-service -n production -p '{"spec":{"selector":{"app":"backend"}}}'
+              kubectl patch service frontend-service -n production -p '{"spec":{"selector":{"app":"frontend"}}}'
+              exit 1
+            fi
+            sleep 10
+          done
+
+      - name: Clean up Blue Environment
+        run: |
+          echo "Cleaning up old blue environment..."
+          # Delete old blue deployments
+          kubectl delete deployment backend-deployment -n production --ignore-not-found=true
+          kubectl delete deployment frontend-deployment -n production --ignore-not-found=true
+          
+          # Rename green to blue for next deployment
+          kubectl patch deployment backend-deployment-green -n production -p '{"metadata":{"name":"backend-deployment"},"spec":{"selector":{"matchLabels":{"app":"backend"}},"template":{"metadata":{"labels":{"app":"backend"}}}}}'
+          kubectl patch deployment frontend-deployment-green -n production -p '{"metadata":{"name":"frontend-deployment"},"spec":{"selector":{"matchLabels":{"app":"frontend"}},"template":{"metadata":{"labels":{"app":"frontend"}}}}}'
+
+      - name: Run production smoke tests
+        run: |
+          echo "Running production smoke tests..."
+          # Comprehensive health checks
+          curl -f https://financial-analysis-platform.com/api/v1/health || exit 1
+          curl -f https://financial-analysis-platform.com/api/v1/monitoring/metrics || exit 1
+          curl -f https://financial-analysis-platform.com/ || exit 1
+          
+          # Test critical user journeys
+          cd backend
+          PRODUCTION_API_URL=https://financial-analysis-platform.com/api/v1 \
+          pytest integration_tests/test_critical_user_journeys.py -v
+
+      - name: Update monitoring and alerting
+        run: |
+          echo "Updating monitoring dashboards..."
+          # Update Grafana dashboards
+          curl -X POST -H "Authorization: Bearer ${{ secrets.GRAFANA_API_KEY }}" \
+               -H "Content-Type: application/json" \
+               -d @infrastructure/monitoring/grafana-dashboard.json \
+               https://grafana.financial-analysis-platform.com/api/dashboards/db
+          
+          # Update alert rules
+          kubectl apply -f infrastructure/monitoring/prometheus-rules.yaml -n monitoring
+
+      - name: Notify production deployment
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          channel: '#deployments'
+          text: |
+            Production deployment ${{ job.status }}!
+            🚀 Version: ${{ github.sha }}
+            🌐 URL: https://financial-analysis-platform.com
+            📊 Monitoring: https://grafana.financial-analysis-platform.com
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Create GitHub release
+        if: success()
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ github.run_number }}
+          release_name: Release v${{ github.run_number }}
+          body: |
+            ## 🚀 Production Deployment v${{ github.run_number }}
+            
+            **Deployed at:** ${{ github.event.head_commit.timestamp }}
+            **Commit:** ${{ github.sha }}
+            **Author:** ${{ github.event.head_commit.author.name }}
+            
+            ### Changes
+            ${{ github.event.head_commit.message }}
+            
+            ### Deployment Details
+            - ✅ All tests passed
+            - ✅ Security scans completed
+            - ✅ Performance benchmarks met
+            - ✅ Blue-green deployment successful
+            - ✅ Health checks passing
+            
+            ### Links
+            - 🌐 [Production Site](https://financial-analysis-platform.com)
+            - 📊 [Monitoring Dashboard](https://grafana.financial-analysis-platform.com)
+            - 📋 [API Documentation](https://financial-analysis-platform.com/docs)
+          draft: false
+          prerelease: false
+
+  # Comprehensive Testing Suite
+  comprehensive-tests:
+    runs-on: ubuntu-latest
+    needs: [code-quality, backend-tests, frontend-tests]
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_USER: test_user
+          POSTGRES_DB: test_financial_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+    
+    - name: Install backend dependencies
+      run: |
+        cd backend
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -r requirements-dev.txt
+    
+    - name: Install frontend dependencies
+      run: |
+        cd frontend
+        npm ci
+    
+    - name: Run comprehensive unit tests with coverage
+       env:
+         DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_financial_db
+         REDIS_URL: redis://localhost:6379/0
+         SECRET_KEY: test-secret-key-for-testing
+         ENVIRONMENT: testing
+       run: |
+         cd backend
+         python -m pytest tests/unit/ -v \
+           --cov=app \
+           --cov-report=html \
+           --cov-report=xml \
+           --cov-report=term-missing \
+           --cov-fail-under=100 \
+           --junitxml=test-results-unit.xml
+    
+    - name: Run integration tests
+      env:
+        DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_financial_db
+        REDIS_URL: redis://localhost:6379/0
+        SECRET_KEY: test-secret-key-for-testing
+        ENVIRONMENT: testing
+      run: |
+        cd backend
+        python -m pytest tests/integration/ -v \
+          --junitxml=test-results-integration.xml
+    
+    - name: Run security tests
+      env:
+        DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_financial_db
+        REDIS_URL: redis://localhost:6379/0
+        SECRET_KEY: test-secret-key-for-testing
+        ENVIRONMENT: testing
+      run: |
+        cd backend
+        python -m pytest tests/security/ -v \
+          --junitxml=test-results-security.xml
+    
+    - name: Run performance tests
+      env:
+        DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_financial_db
+        REDIS_URL: redis://localhost:6379/0
+        SECRET_KEY: test-secret-key-for-testing
+        ENVIRONMENT: testing
+      run: |
+        cd backend
+        python -m pytest tests/performance/ -v \
+          --junitxml=test-results-performance.xml \
+          -m "not slow" # Skip slow performance tests in CI
+    
+    - name: Run frontend unit tests
+      run: |
+        cd frontend
+        npm run test:coverage
+    
+    - name: Upload backend coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./backend/coverage.xml
+        flags: backend
+        name: backend-coverage
+    
+    - name: Upload frontend coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./frontend/coverage/lcov.info
+        flags: frontend
+        name: frontend-coverage
+    
+    - name: Upload test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: test-results
+        path: |
+          backend/test-results-*.xml
+          backend/htmlcov/
+          frontend/coverage/
+    
+    - name: Generate test report
+      if: always()
+      run: |
+        echo "## Test Results Summary" >> $GITHUB_STEP_SUMMARY
+        echo "### Backend Tests" >> $GITHUB_STEP_SUMMARY
+        echo "- Unit Tests: $(grep -o 'tests="[0-9]*"' backend/test-results-unit.xml | grep -o '[0-9]*') tests" >> $GITHUB_STEP_SUMMARY
+        echo "- Integration Tests: $(grep -o 'tests="[0-9]*"' backend/test-results-integration.xml | grep -o '[0-9]*') tests" >> $GITHUB_STEP_SUMMARY
+        echo "- Security Tests: $(grep -o 'tests="[0-9]*"' backend/test-results-security.xml | grep -o '[0-9]*') tests" >> $GITHUB_STEP_SUMMARY
+        echo "- Performance Tests: $(grep -o 'tests="[0-9]*"' backend/test-results-performance.xml | grep -o '[0-9]*') tests" >> $GITHUB_STEP_SUMMARY
+
+  # End-to-End Testing
+  e2e-tests:
+    runs-on: ubuntu-latest
+    needs: [comprehensive-tests]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_USER: test_user
+          POSTGRES_DB: test_financial_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+    
+    - name: Install dependencies
+      run: |
+        cd backend
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        cd ../frontend
+        npm ci
+    
+    - name: Start backend server
+      env:
+        DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_financial_db
+        REDIS_URL: redis://localhost:6379/0
+        SECRET_KEY: test-secret-key-for-testing
+        ENVIRONMENT: testing
+      run: |
+        cd backend
+        python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+        sleep 10
+    
+    - name: Start frontend server
+      run: |
+        cd frontend
+        npm run build
+        npm run preview &
+        sleep 10
+    
+    - name: Install Playwright
+      run: |
+        cd frontend
+        npx playwright install --with-deps
+    
+    - name: Run E2E tests
+      run: |
+        cd frontend
+        npx playwright test
+    
+    - name: Upload E2E test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: e2e-test-results
+        path: |
+          frontend/test-results/
+          frontend/playwright-report/
+
+  # Contract Testing
+  contract-tests:
+    runs-on: ubuntu-latest
+    needs: [comprehensive-tests]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Install dependencies
+      run: |
+        cd backend
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pact-python
+    
+    - name: Run API contract tests
+      run: |
+        cd backend
+        python -m pytest tests/contract/ -v \
+          --junitxml=test-results-contract.xml
+    
+    - name: Upload contract test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: contract-test-results
+        path: backend/test-results-contract.xml
+
+  # Security scan job (enhanced)
+  security-scan:
+    runs-on: ubuntu-latest
+    needs: [comprehensive-tests]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Install security tools
+      run: |
+        python -m pip install --upgrade pip
+        pip install bandit safety semgrep
+        npm install -g audit-ci
+    
+    - name: Run Bandit security scan
+      run: |
+        cd backend
+        bandit -r app/ -f json -o bandit-report.json || true
+    
+    - name: Run Safety dependency scan
+      run: |
+        cd backend
+        safety check --json --output safety-report.json || true
+    
+    - name: Run Semgrep security scan
+      run: |
+        semgrep --config=auto backend/app/ --json --output=semgrep-report.json || true
+    
+    - name: Run npm audit
+      run: |
+        cd frontend
+        npm audit --audit-level=moderate --json > npm-audit-report.json || true
+    
+    - name: Run OWASP ZAP baseline scan
+      uses: zaproxy/action-baseline@v0.7.0
+      with:
+        target: 'http://localhost:8000'
+        rules_file_name: '.zap/rules.tsv'
+        cmd_options: '-a'
+    
+    - name: Upload security scan results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: security-scan-results
+        path: |
+          backend/bandit-report.json
+          backend/safety-report.json
+          semgrep-report.json
+          frontend/npm-audit-report.json
+          report_html.html
+    
+    - name: Generate security summary
+      if: always()
+      run: |
+        echo "## Security Scan Results" >> $GITHUB_STEP_SUMMARY
+        echo "### Backend Security" >> $GITHUB_STEP_SUMMARY
+        echo "- Bandit scan completed" >> $GITHUB_STEP_SUMMARY
+        echo "- Safety dependency scan completed" >> $GITHUB_STEP_SUMMARY
+        echo "- Semgrep scan completed" >> $GITHUB_STEP_SUMMARY
+        echo "### Frontend Security" >> $GITHUB_STEP_SUMMARY
+        echo "- npm audit completed" >> $GITHUB_STEP_SUMMARY
+        echo "### Infrastructure Security" >> $GITHUB_STEP_SUMMARY
+        echo "- OWASP ZAP baseline scan completed" >> $GITHUB_STEP_SUMMARY
+
+  # Compliance Testing
+  compliance-tests:
+    runs-on: ubuntu-latest
+    needs: [comprehensive-tests]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Install dependencies
+      run: |
+        cd backend
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Run GDPR compliance tests
+      run: |
+        cd backend
+        python -m pytest tests/compliance/test_gdpr.py -v \
+          --junitxml=test-results-gdpr.xml
+    
+    - name: Run SOX compliance tests
+      run: |
+        cd backend
+        python -m pytest tests/compliance/test_sox.py -v \
+          --junitxml=test-results-sox.xml
+    
+    - name: Run PCI-DSS compliance tests
+      run: |
+        cd backend
+        python -m pytest tests/compliance/test_pci_dss.py -v \
+          --junitxml=test-results-pci.xml
+    
+    - name: Upload compliance test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: compliance-test-results
+        path: backend/test-results-*.xml
+
+  # Performance Benchmarking
+  performance-benchmarks:
+    runs-on: ubuntu-latest
+    needs: [comprehensive-tests]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_USER: test_user
+          POSTGRES_DB: test_financial_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Install dependencies
+      run: |
+        cd backend
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install locust
+    
+    - name: Run performance benchmarks
+      env:
+        DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_financial_db
+        REDIS_URL: redis://localhost:6379/0
+        SECRET_KEY: test-secret-key-for-testing
+        ENVIRONMENT: testing
+      run: |
+        cd backend
+        python -m pytest tests/performance/ -v \
+          --benchmark-only \
+          --benchmark-json=benchmark-results.json
+    
+    - name: Run load tests
+      env:
+        DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_financial_db
+        REDIS_URL: redis://localhost:6379/0
+        SECRET_KEY: test-secret-key-for-testing
+        ENVIRONMENT: testing
+      run: |
+        cd backend
+        python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+        sleep 10
+        locust -f tests/performance/locustfile.py --headless -u 50 -r 10 -t 60s --host=http://localhost:8000 --html=load-test-report.html
+    
+    - name: Upload performance results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: performance-results
+        path: |
+          backend/benchmark-results.json
+          backend/load-test-report.html
+    
+    - name: Store benchmark results
+      uses: benchmark-action/github-action-benchmark@v1
+      if: github.ref == 'refs/heads/main'
+      with:
+        tool: 'pytest'
+        output-file-path: backend/benchmark-results.json
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        auto-push: true

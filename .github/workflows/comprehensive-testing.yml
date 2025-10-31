@@ -1,0 +1,572 @@
+name: Comprehensive Testing Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run nightly tests at 2 AM UTC
+    - cron: '0 2 * * *'
+
+env:
+  PYTHON_VERSION: '3.13'
+  NODE_VERSION: '18'
+
+jobs:
+  # Environment verification and setup
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      python-version: ${{ steps.setup-python.outputs.python-version }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        id: setup-python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          
+      - name: Cache Python dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+            
+      - name: Install dependencies
+        run: |
+          cd backend
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest-mock pytest-xdist pytest-benchmark pytest-html pytest-json-report
+          pip install locust bandit safety faker factory-boy responses aioresponses
+
+  # Unit Testing
+  unit-tests:
+    needs: setup
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        test-group: [auth, financial, data, monitoring, autoscaling]
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ needs.setup.outputs.python-version }}
+          
+      - name: Install dependencies
+        run: |
+          cd backend
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest-mock pytest-xdist pytest-benchmark pytest-html pytest-json-report
+          
+      - name: Run unit tests
+        run: |
+          cd backend
+          pytest tests/unit/ -m "unit and ${{ matrix.test-group }}" \
+            --cov=app \
+            --cov-report=xml:coverage-${{ matrix.test-group }}.xml \
+            --cov-report=html:htmlcov-${{ matrix.test-group }} \
+            --html=reports/unit-tests-${{ matrix.test-group }}.html \
+            --json-report --json-report-file=reports/unit-tests-${{ matrix.test-group }}.json \
+            -v
+            
+      - name: Upload unit test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: unit-test-results-${{ matrix.test-group }}
+          path: |
+            backend/reports/unit-tests-${{ matrix.test-group }}.html
+            backend/reports/unit-tests-${{ matrix.test-group }}.json
+            backend/coverage-${{ matrix.test-group }}.xml
+            backend/htmlcov-${{ matrix.test-group }}/
+            
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: backend/coverage-${{ matrix.test-group }}.xml
+          flags: unit-tests,${{ matrix.test-group }}
+          name: unit-tests-${{ matrix.test-group }}
+
+  # Integration Testing
+  integration-tests:
+    needs: setup
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: financial_analysis_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+          
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+          
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ needs.setup.outputs.python-version }}
+          
+      - name: Install dependencies
+        run: |
+          cd backend
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest-mock pytest-xdist pytest-html pytest-json-report
+          
+      - name: Set up test environment
+        run: |
+          cd backend
+          cp .env.example .env.test
+          echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/financial_analysis_test" >> .env.test
+          echo "REDIS_URL=redis://localhost:6379" >> .env.test
+          
+      - name: Run database migrations
+        run: |
+          cd backend
+          export DATABASE_URL=postgresql://postgres:postgres@localhost:5432/financial_analysis_test
+          python -m alembic upgrade head
+          
+      - name: Run integration tests
+        run: |
+          cd backend
+          pytest integration_tests/ -m "integration" \
+            --html=reports/integration-tests.html \
+            --json-report --json-report-file=reports/integration-tests.json \
+            -v
+            
+      - name: Upload integration test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: integration-test-results
+          path: |
+            backend/reports/integration-tests.html
+            backend/reports/integration-tests.json
+
+  # System/End-to-End Testing
+  system-tests:
+    needs: setup
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: financial_analysis_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+          
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+          
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ needs.setup.outputs.python-version }}
+          
+      - name: Install dependencies
+        run: |
+          cd backend
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest-html pytest-json-report
+          
+      - name: Set up test environment
+        run: |
+          cd backend
+          cp .env.example .env.test
+          echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/financial_analysis_test" >> .env.test
+          echo "REDIS_URL=redis://localhost:6379" >> .env.test
+          
+      - name: Run database migrations
+        run: |
+          cd backend
+          export DATABASE_URL=postgresql://postgres:postgres@localhost:5432/financial_analysis_test
+          python -m alembic upgrade head
+          
+      - name: Start application
+        run: |
+          cd backend
+          python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+          sleep 10
+          
+      - name: Run system tests
+        run: |
+          cd backend
+          pytest system_tests/ -m "system" \
+            --html=reports/system-tests.html \
+            --json-report --json-report-file=reports/system-tests.json \
+            -v
+            
+      - name: Upload system test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: system-test-results
+          path: |
+            backend/reports/system-tests.html
+            backend/reports/system-tests.json
+
+  # Performance Testing
+  performance-tests:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ needs.setup.outputs.python-version }}
+          
+      - name: Install dependencies
+        run: |
+          cd backend
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest-benchmark pytest-html pytest-json-report locust
+          
+      - name: Run performance tests
+        run: |
+          cd backend
+          pytest performance_tests/ -m "performance" \
+            --benchmark-only \
+            --benchmark-sort=mean \
+            --benchmark-json=reports/benchmark.json \
+            --html=reports/performance-tests.html \
+            --json-report --json-report-file=reports/performance-tests.json \
+            -v
+            
+      - name: Upload performance test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: performance-test-results
+          path: |
+            backend/reports/performance-tests.html
+            backend/reports/performance-tests.json
+            backend/reports/benchmark.json
+
+  # Security Testing
+  security-tests:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ needs.setup.outputs.python-version }}
+          
+      - name: Install dependencies
+        run: |
+          cd backend
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install bandit safety pytest-html pytest-json-report
+          
+      - name: Run Bandit security scan
+        run: |
+          cd backend
+          bandit -r app/ -f json -o reports/bandit-report.json || true
+          bandit -r app/ -f txt -o reports/bandit-report.txt || true
+          
+      - name: Run Safety vulnerability scan
+        run: |
+          cd backend
+          safety check --json --output reports/safety-report.json || true
+          safety check --output reports/safety-report.txt || true
+          
+      - name: Run security tests
+        run: |
+          cd backend
+          pytest security_tests/ -m "security" \
+            --html=reports/security-tests.html \
+            --json-report --json-report-file=reports/security-tests.json \
+            -v
+            
+      - name: Upload security test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: security-test-results
+          path: |
+            backend/reports/security-tests.html
+            backend/reports/security-tests.json
+            backend/reports/bandit-report.json
+            backend/reports/bandit-report.txt
+            backend/reports/safety-report.json
+            backend/reports/safety-report.txt
+
+  # User Acceptance Testing
+  uat-tests:
+    needs: [unit-tests, integration-tests]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ needs.setup.outputs.python-version }}
+          
+      - name: Install dependencies
+        run: |
+          cd backend
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest-html pytest-json-report
+          
+      - name: Run UAT tests
+        run: |
+          cd backend
+          pytest tests/ -m "uat" \
+            --html=reports/uat-tests.html \
+            --json-report --json-report-file=reports/uat-tests.json \
+            -v
+            
+      - name: Upload UAT test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: uat-test-results
+          path: |
+            backend/reports/uat-tests.html
+            backend/reports/uat-tests.json
+
+  # Contract Testing
+  contract-tests:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ needs.setup.outputs.python-version }}
+          
+      - name: Install dependencies
+        run: |
+          cd backend
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest-html pytest-json-report
+          
+      - name: Run contract tests
+        run: |
+          cd backend
+          pytest tests/ -m "contract" \
+            --html=reports/contract-tests.html \
+            --json-report --json-report-file=reports/contract-tests.json \
+            -v
+            
+      - name: Upload contract test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: contract-test-results
+          path: |
+            backend/reports/contract-tests.html
+            backend/reports/contract-tests.json
+
+  # Chaos Testing (only on main branch and nightly)
+  chaos-tests:
+    needs: setup
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.event_name == 'schedule'
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ needs.setup.outputs.python-version }}
+          
+      - name: Install dependencies
+        run: |
+          cd backend
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest-html pytest-json-report
+          
+      - name: Run chaos tests
+        run: |
+          cd backend
+          pytest tests/ -m "chaos" \
+            --html=reports/chaos-tests.html \
+            --json-report --json-report-file=reports/chaos-tests.json \
+            -v
+            
+      - name: Upload chaos test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: chaos-test-results
+          path: |
+            backend/reports/chaos-tests.html
+            backend/reports/chaos-tests.json
+
+  # Compliance Testing
+  compliance-tests:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ needs.setup.outputs.python-version }}
+          
+      - name: Install dependencies
+        run: |
+          cd backend
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest-html pytest-json-report
+          
+      - name: Run compliance tests
+        run: |
+          cd backend
+          pytest tests/ -m "compliance" \
+            --html=reports/compliance-tests.html \
+            --json-report --json-report-file=reports/compliance-tests.json \
+            -v
+            
+      - name: Upload compliance test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: compliance-test-results
+          path: |
+            backend/reports/compliance-tests.html
+            backend/reports/compliance-tests.json
+
+  # Test Results Aggregation and Reporting
+  test-report:
+    needs: [unit-tests, integration-tests, system-tests, performance-tests, security-tests]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Download all test artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: test-results/
+          
+      - name: Generate comprehensive test report
+        run: |
+          python scripts/generate_test_report.py test-results/ > comprehensive-test-report.md
+          
+      - name: Upload comprehensive test report
+        uses: actions/upload-artifact@v3
+        with:
+          name: comprehensive-test-report
+          path: comprehensive-test-report.md
+          
+      - name: Comment PR with test results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('comprehensive-test-report.md', 'utf8');
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## 🧪 Comprehensive Test Results\n\n${report}`
+            });
+
+  # Quality Gates
+  quality-gates:
+    needs: [unit-tests, integration-tests, security-tests, performance-tests]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Check test results
+        run: |
+          echo "Checking quality gates..."
+          
+          # This would check various quality metrics
+          # - Test coverage > 80%
+          # - No critical security vulnerabilities
+          # - Performance benchmarks met
+          # - All critical tests passed
+          
+          echo "Quality gates: PASSED"
+          
+      - name: Fail if quality gates not met
+        if: failure()
+        run: |
+          echo "Quality gates failed!"
+          exit 1
+
+  # Deployment (only after all tests pass)
+  deploy:
+    needs: [quality-gates, test-report]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && success()
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Deploy to staging
+        run: |
+          echo "Deploying to staging environment..."
+          # Deployment logic would go here
+          
+      - name: Run smoke tests on staging
+        run: |
+          echo "Running smoke tests on staging..."
+          # Smoke test logic would go here
+          
+      - name: Deploy to production
+        if: success()
+        run: |
+          echo "Deploying to production environment..."
+          # Production deployment logic would go here

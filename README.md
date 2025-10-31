@@ -5,6 +5,7 @@ A comprehensive financial analysis platform for fundamental analysis, portfolio 
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Python 3.11+ (we're using 3.13.5)
 - Node.js 18+ (we're using 22.17.1)
 - PostgreSQL 15+ (optional for local development)
@@ -13,26 +14,29 @@ A comprehensive financial analysis platform for fundamental analysis, portfolio 
 ### Development Setup
 
 1. **Clone and setup the repository**
+   
    ```bash
    git clone <repository-url>
    cd "Financial Analysis Platform"
    ```
 
 2. **Backend Setup**
+   
    ```bash
    # Create and activate virtual environment
    python -m venv venv
    ./venv/Scripts/activate  # Windows
-
+   
    # Install dependencies
    pip install fastapi uvicorn python-dotenv pydantic-settings email-validator httpx pytest
-
+   
    # Run the development server
    cd backend
    ../venv/Scripts/python.exe run.py
    ```
 
 3. **Frontend Setup** (coming soon)
+   
    ```bash
    cd frontend
    npm install
@@ -76,6 +80,7 @@ Financial Analysis Platform/
 ## 🛠️ Development Status
 
 ### ✅ Completed (Week 1)
+
 - [x] Development environment setup
 - [x] Git repository and branching strategy
 - [x] Project directory structure
@@ -85,11 +90,13 @@ Financial Analysis Platform/
 - [x] Docker development environment
 
 ### 🔄 In Progress (Week 1-2)
+
 - [ ] PostgreSQL database connection
 - [ ] Redis caching layer
 - [ ] Code quality tools configuration
 
 ### 📋 Upcoming (Week 2-3)
+
 - [ ] Authentication service
 - [ ] Database models and migrations
 - [ ] External API integrations
@@ -105,6 +112,7 @@ Financial Analysis Platform/
 - `GET /api/v1/openapi.json` - OpenAPI specification
 
 ### Interactive API Documentation
+
 - Swagger UI: `http://localhost:8000/docs`
 - ReDoc: `http://localhost:8000/redoc`
 
@@ -132,18 +140,21 @@ Comprehensive documentation is available in the `/docs` directory:
 ## 🏗️ Architecture
 
 ### Backend (FastAPI)
+
 - **Microservices Architecture**: Auth, Data, Calculator, Portfolio, Scanner, Report, Audit
 - **Database**: PostgreSQL with TimescaleDB extension
 - **Cache**: Redis for caching and session management
 - **Task Queue**: Celery with Redis broker
 
 ### Frontend (React)
+
 - **Framework**: React 18+ with TypeScript
 - **State Management**: Redux Toolkit with RTK Query
 - **Styling**: Tailwind CSS
 - **Charts**: Chart.js and recharts
 
 ### Infrastructure
+
 - **Containerization**: Docker with multi-stage builds
 - **Orchestration**: Kubernetes for production
 - **CI/CD**: GitHub Actions
@@ -152,6 +163,7 @@ Comprehensive documentation is available in the `/docs` directory:
 ## 🔧 Configuration
 
 ### Backend Environment Variables
+
 See `backend/.env.example` for available configuration options:
 
 ```env
@@ -169,6 +181,7 @@ FINANCIAL_MODELING_PREP_API_KEY=your-fmp-key
 ## 🚦 Project Roadmap
 
 ### Phase 1: Foundation (Weeks 1-6)
+
 - [x] Development environment
 - [x] Core infrastructure services
 - [ ] Authentication and security framework
@@ -176,18 +189,21 @@ FINANCIAL_MODELING_PREP_API_KEY=your-fmp-key
 - [ ] External data integration
 
 ### Phase 2: Backend Development (Weeks 4-14)
+
 - [ ] Financial calculations engine
 - [ ] Data management services
 - [ ] Market scanner service
 - [ ] Portfolio management system
 
 ### Phase 3: Frontend Development (Weeks 8-18)
+
 - [ ] UI framework and components
 - [ ] Data visualization
 - [ ] User interfaces
 - [ ] Mobile responsiveness
 
 ### Phase 4: Integration & Testing (Weeks 14-20)
+
 - [ ] System integration
 - [ ] Comprehensive testing
 - [ ] Deployment infrastructure
@@ -198,15 +214,17 @@ FINANCIAL_MODELING_PREP_API_KEY=your-fmp-key
 This project follows a documentation-first approach. Please ensure all changes are properly tested and documented.
 
 ### Development Workflow
+
 1. Create feature branch from `main`
 2. Implement changes with tests
 3. Update documentation
 4. Submit pull request for review
 
 ### Code Quality Standards
+
 - Python: Black formatting, Flake8 linting, type hints
 - TypeScript: Prettier formatting, ESLint linting
-- Tests: Minimum 80% coverage
+- Tests: Minimum 95% coverage
 - Documentation: All public APIs documented
 
 ## 📄 License
@@ -216,6 +234,7 @@ This project is proprietary and confidential.
 ## 🆘 Support
 
 For questions or issues:
+
 1. Check the comprehensive documentation in `/docs`
 2. Review the existing GitHub issues
 3. Contact the development team

@@ -7,23 +7,27 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.auth import get_current_user
+from app.core.logging import get_logger
 from app.core.database import get_async_session
+from app.models.user import User
 from app.schemas.auth import ErrorResponse
 from app.schemas.financial import (
     BatchRatiosRequest,
     BatchRatiosResponse,
-    CompanyFinancialDataResponse,
-    FinancialHealthScore,
-    FinancialRatiosRequest,
-    FinancialRatiosResponse,
-    PeerComparisonRequest,
-    PeerComparisonResponse,
-    ValuationRequest,
+    CompanyFinancialDataResponse
+    FinancialHealthScore
+    FinancialRatiosRequest
+    FinancialRatiosResponse
+    PeerComparisonRequest
+    PeerComparisonResponse
+    ValuationRequest
     ValuationResponse,
 )
 from app.services.calculator.financial_calculator import financial_calculator
 
 router = APIRouter(prefix="/financial", tags=["Financial Analysis"])
+logger = get_logger("api.financial")
 
 
 @router.post(
@@ -41,15 +45,16 @@ router = APIRouter(prefix="/financial", tags=["Financial Analysis"])
 async def calculate_financial_ratios(
     request: FinancialRatiosRequest,
     db: Annotated[AsyncSession, Depends(get_async_session)],
+    current_user: User = Depends(get_current_user),
 ):
     """
     Calculate comprehensive financial ratios for a company
-    
+
     - **company_id**: UUID of the company
     - **period_type**: 'quarterly' or 'annual'
     - **fiscal_year**: Fiscal year for the calculation
     - **fiscal_quarter**: Fiscal quarter (1-4, required for quarterly data)
-    
+
     Returns calculated ratios including:
     - Liquidity ratios (current, quick, cash ratios)
     - Profitability ratios (margins, ROA, ROE, ROIC)
@@ -60,20 +65,18 @@ async def calculate_financial_ratios(
     - Quality scores (Piotroski F-Score)
     """
     try:
-        # Validate quarterly data requirements
         if request.period_type == 'quarterly' and not request.fiscal_quarter:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Fiscal quarter is required for quarterly data"
             )
-        
+
         if request.fiscal_quarter and not (1 <= request.fiscal_quarter <= 4):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Fiscal quarter must be between 1 and 4"
             )
-        
-        # Calculate ratios
+
         ratios_data = await financial_calculator.calculate_financial_ratios(
             company_id=request.company_id,
             period_type=request.period_type,
@@ -81,24 +84,24 @@ async def calculate_financial_ratios(
             fiscal_quarter=request.fiscal_quarter,
             db=db
         )
-        
+
         if not ratios_data:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Company or financial data not found for the specified period"
             )
-        
-        # Save calculated ratios to database
+
         await financial_calculator.save_calculated_ratios(ratios_data, db)
-        
+
         return FinancialRatiosResponse(**ratios_data)
-        
+
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Financial ratio calculation error: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error calculating financial ratios: {str(e)}"
+            detail="Calculation failed. Please try again later."
         )
 
 
@@ -117,10 +120,11 @@ async def calculate_financial_ratios(
 async def calculate_company_valuation(
     request: ValuationRequest,
     db: Annotated[AsyncSession, Depends(get_async_session)],
+    current_user: User = Depends(get_current_user),
 ):
     """
     Calculate comprehensive company valuation using multiple models
-    
+
     - **company_id**: UUID of the company
     - **assumptions**: Valuation assumptions including:
         - free_cash_flows: List of projected free cash flows
@@ -130,7 +134,7 @@ async def calculate_company_valuation(
         - dividend_growth_rate: Expected dividend growth rate
         - required_return: Required rate of return
         - earnings_growth_rate: Expected earnings growth rate
-    
+
     Returns valuation estimates from:
     - Discounted Cash Flow (DCF) model
     - Dividend Discount Model (DDM)
@@ -145,21 +149,22 @@ async def calculate_company_valuation(
             valuation_assumptions=request.assumptions,
             db=db
         )
-        
+
         if not valuation_data:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Company not found or insufficient financial data for valuation"
             )
-        
+
         return ValuationResponse(**valuation_data)
-        
+
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Valuation calculation error: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error calculating valuation: {str(e)}"
+            detail="Calculation failed. Please try again later."
         )
 
 
@@ -178,15 +183,16 @@ async def calculate_company_valuation(
 async def peer_comparison_analysis(
     request: PeerComparisonRequest,
     db: Annotated[AsyncSession, Depends(get_async_session)],
+    current_user: User = Depends(get_current_user),
 ):
     """
     Compare a company's financial ratios with peer companies
-    
+
     - **company_id**: UUID of the target company
     - **peer_company_ids**: List of peer company UUIDs
     - **period_type**: 'quarterly' or 'annual'
     - **fiscal_year**: Fiscal year for comparison
-    
+
     Returns:
     - Target company ratios
     - Peer company ratios
@@ -198,7 +204,7 @@ async def peer_comparison_analysis(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="At least one peer company ID is required"
             )
-        
+
         comparison_data = await financial_calculator.get_peer_comparison(
             company_id=request.company_id,
             peer_company_ids=request.peer_company_ids,
@@ -206,21 +212,22 @@ async def peer_comparison_analysis(
             fiscal_year=request.fiscal_year,
             db=db
         )
-        
+
         if not comparison_data:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Target company data not found for the specified period"
             )
-        
+
         return PeerComparisonResponse(**comparison_data)
-        
+
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Peer comparison error: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error in peer comparison: {str(e)}"
+            detail="Peer comparison failed. Please try again later."
         )
 
 
@@ -241,15 +248,16 @@ async def get_company_financial_data(
     fiscal_year: int,
     fiscal_quarter: Optional[int] = None,
     db: Annotated[AsyncSession, Depends(get_async_session)] = None,
+    current_user: User = Depends(get_current_user),
 ):
     """
     Get raw financial data for a company
-    
+
     - **company_id**: UUID of the company
     - **period_type**: 'quarterly' or 'annual'
     - **fiscal_year**: Fiscal year
     - **fiscal_quarter**: Fiscal quarter (optional, for quarterly data)
-    
+
     Returns raw financial statement data and market data
     """
     try:
@@ -260,25 +268,24 @@ async def get_company_financial_data(
             fiscal_quarter=fiscal_quarter,
             db=db
         )
-        
+
         if not financial_data:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Financial data not found for the specified company and period"
             )
-        
-        # Separate market data from financial data
+
         market_data = {}
         pure_financial_data = {}
-        
+
         market_fields = ['stock_price', 'volume', 'market_date', 'market_cap']
-        
+
         for key, value in financial_data.items():
             if key in market_fields:
                 market_data[key] = value
             else:
                 pure_financial_data[key] = value
-        
+
         return CompanyFinancialDataResponse(
             company_id=company_id,
             period_type=period_type,
@@ -287,13 +294,14 @@ async def get_company_financial_data(
             financial_data=pure_financial_data,
             market_data=market_data if market_data else None
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Financial data retrieval error: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error retrieving financial data: {str(e)}"
+            detail="Failed to retrieve financial data. Please try again later."
         )
 
 
@@ -311,15 +319,16 @@ async def get_company_financial_data(
 async def batch_calculate_ratios(
     request: BatchRatiosRequest,
     db: Annotated[AsyncSession, Depends(get_async_session)],
+    current_user: User = Depends(get_current_user),
 ):
     """
     Calculate financial ratios for multiple companies in batch
-    
+
     - **company_ids**: List of company UUIDs
     - **period_type**: 'quarterly' or 'annual'
     - **fiscal_year**: Fiscal year
     - **fiscal_quarter**: Fiscal quarter (for quarterly data)
-    
+
     Returns results for successful calculations and errors for failed ones
     """
     try:
@@ -328,16 +337,16 @@ async def batch_calculate_ratios(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="At least one company ID is required"
             )
-        
+
         if len(request.company_ids) > 100:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Maximum 100 companies allowed per batch request"
             )
-        
+
         successful_calculations = []
         failed_calculations = []
-        
+
         for company_id in request.company_ids:
             try:
                 ratios_data = await financial_calculator.calculate_financial_ratios(
@@ -347,9 +356,8 @@ async def batch_calculate_ratios(
                     fiscal_quarter=request.fiscal_quarter,
                     db=db
                 )
-                
+
                 if ratios_data:
-                    # Save calculated ratios
                     await financial_calculator.save_calculated_ratios(ratios_data, db)
                     successful_calculations.append(FinancialRatiosResponse(**ratios_data))
                 else:
@@ -357,13 +365,14 @@ async def batch_calculate_ratios(
                         "company_id": str(company_id),
                         "error": "Financial data not found for the specified period"
                     })
-                    
+
             except Exception as e:
+                logger.error(f"Batch calculation failed for company {company_id}: {str(e)}", exc_info=True)
                 failed_calculations.append({
                     "company_id": str(company_id),
-                    "error": str(e)
+                    "error": "Calculation failed for this company"
                 })
-        
+
         return BatchRatiosResponse(
             successful_calculations=successful_calculations,
             failed_calculations=failed_calculations,
@@ -371,11 +380,12 @@ async def batch_calculate_ratios(
             total_successful=len(successful_calculations),
             total_failed=len(failed_calculations)
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Batch calculation error: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error in batch calculation: {str(e)}"
+            detail="Batch calculation failed. Please try again later."
         )

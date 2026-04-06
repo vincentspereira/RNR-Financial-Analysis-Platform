@@ -460,21 +460,24 @@ class DataIngestionService:
         
         # Create semaphore to limit concurrent requests
         semaphore = asyncio.Semaphore(max_concurrent)
+        _results_lock = asyncio.Lock()
         
         async def ingest_single(symbol: str):
             async with semaphore:
                 try:
                     result = await self.ingest_company_data(symbol, db, user_id)
-                    if result['success']:
-                        results['successful'].append(result)
-                    else:
-                        results['failed'].append(result)
+                    async with _results_lock:
+                        if result['success']:
+                            results['successful'].append(result)
+                        else:
+                            results['failed'].append(result)
                 except Exception as e:
-                    results['failed'].append({
-                        'symbol': symbol,
-                        'success': False,
-                        'errors': [str(e)]
-                    })
+                    async with _results_lock:
+                        results['failed'].append({
+                            'symbol': symbol,
+                            'success': False,
+                            'errors': [str(e)]
+                        })
         
         # Run batch ingestion
         tasks = [ingest_single(symbol) for symbol in symbols]

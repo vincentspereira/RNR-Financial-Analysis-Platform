@@ -283,7 +283,7 @@ class ErrorTracker:
         
         # Calculate errors in the last hour
         now = datetime.now(timezone.utc)
-        one_hour_ago = now.replace(hour=now.hour-1) if now.hour > 0 else now.replace(day=now.day-1, hour=23)
+        one_hour_ago = now - timedelta(hours=1)
         
         recent_errors = [
             report for report in self.error_reports
@@ -301,7 +301,7 @@ class ErrorTracker:
     
     def clear_old_errors(self, days: int = 7):
         """Clear errors older than specified days"""
-        cutoff_date = datetime.now(timezone.utc).replace(day=datetime.now().day - days)
+        cutoff_date = datetime.now(timezone.utc) - timedelta(days=days)
         self.error_reports = [
             report for report in self.error_reports
             if report.timestamp >= cutoff_date

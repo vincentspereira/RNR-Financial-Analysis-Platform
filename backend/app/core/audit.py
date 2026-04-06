@@ -10,7 +10,7 @@ from uuid import UUID, uuid4
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_
 
-from app.core.database import get_async_session
+from app.core.database import get_async_session, AsyncSessionLocal
 from app.core.logging import get_logger
 from app.models.audit import AuditLog
 
@@ -136,7 +136,7 @@ class AuditLogger:
         
         # Store in database
         try:
-            async with get_async_session() as db:
+            async with AsyncSessionLocal() as db:
                 audit_log = AuditLog(
                     id=audit_id,
                     event_type=event_type.value,
@@ -172,7 +172,7 @@ class AuditLogger:
     async def verify_integrity(self, audit_id: UUID) -> bool:
         """Verify the integrity of an audit log entry"""
         try:
-            async with get_async_session() as db:
+            async with AsyncSessionLocal() as db:
                 result = await db.execute(
                     select(AuditLog).where(AuditLog.id == audit_id)
                 )
@@ -217,7 +217,7 @@ class AuditLogger:
     ) -> List[Dict[str, Any]]:
         """Get audit trail with filtering options"""
         try:
-            async with get_async_session() as db:
+            async with AsyncSessionLocal() as db:
                 query = select(AuditLog)
                 
                 conditions = []
@@ -270,7 +270,7 @@ class AuditLogger:
     ) -> Dict[str, Any]:
         """Generate compliance report for regulatory requirements"""
         try:
-            async with get_async_session() as db:
+            async with AsyncSessionLocal() as db:
                 query = select(AuditLog).where(
                     and_(
                         AuditLog.compliance_category == compliance_category.value,

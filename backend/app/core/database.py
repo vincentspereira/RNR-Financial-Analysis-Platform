@@ -4,7 +4,8 @@ Database configuration and connection management for Financial Analysis Platform
 import os
 from typing import AsyncGenerator
 
-from sqlalchemy import MetaData, create_engine
+from sqlalchemy import
+eate_engine, text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
@@ -128,7 +129,7 @@ async def check_database_connection() -> bool:
     """
     try:
         async with async_engine.begin() as conn:
-            await conn.execute("SELECT 1")
+            await conn.execute(text("SELECT 1"))
         db_logger.logger.info("Database connection check: OK")
         return True
     except Exception as e:

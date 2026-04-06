@@ -13,7 +13,10 @@ from app.core.database import get_async_session
 from app.models.audit import AuditLog
 from app.models.user import User, UserSession
 from app.services.auth.jwt_handler import jwt_handler
+from app.core.logging import get_logger
 from app.services.auth.password_handler import password_handler
+
+logger = get_logger("app.auth.service")
 
 
 class AuthService:
@@ -90,7 +93,8 @@ class AuthService:
             
         except Exception as e:
             await db.rollback()
-            return None, f"Registration failed: {str(e)}"
+            logger.error(f"Registration failed: {str(e)}", exc_info=True)
+            return None, "Registration failed. Please try again."
     
     async def authenticate_user(
         self,
@@ -182,7 +186,8 @@ class AuthService:
             
         except Exception as e:
             await db.rollback()
-            return None, f"Authentication failed: {str(e)}"
+            logger.error(f"Authentication failed: {str(e)}", exc_info=True)
+            return None, "Authentication failed. Please try again."
     
     async def create_user_session(
         self,
@@ -271,7 +276,8 @@ class AuthService:
             
         except Exception as e:
             await db.rollback()
-            return None, f"Session creation failed: {str(e)}"
+            logger.error(f"Session creation failed: {str(e)}", exc_info=True)
+            return None, "Session creation failed. Please try again."
     
     async def refresh_token(
         self,
@@ -353,7 +359,8 @@ class AuthService:
             
         except Exception as e:
             await db.rollback()
-            return None, f"Token refresh failed: {str(e)}"
+            logger.error(f"Token refresh failed: {str(e)}", exc_info=True)
+            return None, "Token refresh failed. Please reauthenticate."
     
     async def logout_user(
         self,
@@ -415,7 +422,8 @@ class AuthService:
             
         except Exception as e:
             await db.rollback()
-            return False, f"Logout failed: {str(e)}"
+            logger.error(f"Logout failed: {str(e)}", exc_info=True)
+            return False, "Logout failed. Please try again."
     
     async def get_user_by_email(self, email: str, db: AsyncSession) -> Optional[User]:
         """Get user by email address"""

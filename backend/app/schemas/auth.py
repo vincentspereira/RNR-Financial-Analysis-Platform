@@ -11,16 +11,16 @@ from pydantic import BaseModel, EmailStr, Field, field_validator, ConfigDict
 class RegisterRequest(BaseModel):
     """User registration request schema"""
     email: EmailStr = Field(..., description="User email address")
-    password: str = Field(..., min_length=8, max_length=72, description="User password")
+    password: str = Field(..., min_length=12, max_length=72, description="User password")
     first_name: str = Field(..., min_length=1, max_length=100, description="First name")
     last_name: str = Field(..., min_length=1, max_length=100, description="Last name")
-    
+
     @field_validator('password')
     @classmethod
     def validate_password(cls, v):
         """Validate password strength"""
-        if len(v) < 8:
-            raise ValueError('Password must be at least 8 characters long')
+        if len(v) < 12:
+            raise ValueError('Password must be at least 12 characters long')
         
         # Check for at least one uppercase, lowercase, digit, and special character
         has_upper = any(c.isupper() for c in v)

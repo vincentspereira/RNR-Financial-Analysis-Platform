@@ -10,7 +10,7 @@ from pydantic import BaseModel, validator, ValidationError
 from fastapi import HTTPException, status
 
 
-class ValidationError(Exception):
+class InputValidationError(Exception):
     """Custom validation error"""
     pass
 
@@ -78,8 +78,8 @@ class InputValidator:
         if not isinstance(password, str):
             raise ValidationError("Password must be a string")
         
-        if len(password) < 8:
-            raise ValidationError("Password must be at least 8 characters long")
+        if len(password) < 12:
+            raise ValidationError("Password must be at least 12 characters long")
         
         if len(password) > 128:
             raise ValidationError("Password too long (max 128 characters)")

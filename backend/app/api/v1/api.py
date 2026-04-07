@@ -3,7 +3,22 @@ Main API v1 router
 """
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import auth, financial, data, monitoring, websocket, analytics, reports
+from app.api.v1.endpoints import (
+    auth,
+    financial,
+    data,
+    monitoring,
+    websocket,
+    analytics,
+    reports,
+    # Phase 4 endpoints
+    market_data,
+    technical_analysis,
+    portfolio_optimization,
+    backtesting,
+    sentiment,
+    billing,
+)
 
 api_router = APIRouter()
 
@@ -28,6 +43,14 @@ api_router.include_router(analytics.router, prefix="/analytics", tags=["analytic
 # Include reports endpoints
 api_router.include_router(reports.router, prefix="/reports", tags=["reports"])
 
+# Phase 4: World-Class Features
+api_router.include_router(market_data.router)
+api_router.include_router(technical_analysis.router)
+api_router.include_router(portfolio_optimization.router)
+api_router.include_router(backtesting.router)
+api_router.include_router(sentiment.router)
+api_router.include_router(billing.router)
+
 # Health check endpoint
 @api_router.get("/health")
 async def health_check():
@@ -44,7 +67,12 @@ async def health_check():
             "Batch Processing",
             "Quality Scores (Piotroski, Altman Z-Score)",
             "External Data Integration (Alpha Vantage, Yahoo Finance)",
-            "Real-time Market Data",
+            "Real-time Market Data Streaming (Polygon.io)",
+            "Technical Analysis Engine (50+ indicators)",
+            "Portfolio Optimization (Monte Carlo, VaR/CVaR, Efficient Frontier)",
+            "Backtesting Framework (6 strategy types)",
+            "Sentiment Analysis (NewsAPI, Finnhub)",
+            "Billing & Subscriptions (Stripe)",
             "Comprehensive Audit Logging"
         ]
     }

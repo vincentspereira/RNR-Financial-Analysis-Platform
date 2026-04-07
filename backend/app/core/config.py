@@ -63,6 +63,20 @@ class Settings(BaseSettings):
     ALPHA_VANTAGE_API_KEY: Optional[str] = os.getenv("ALPHA_VANTAGE_API_KEY")
     FINANCIAL_MODELING_PREP_API_KEY: Optional[str] = os.getenv("FINANCIAL_MODELING_PREP_API_KEY")
 
+    # Market Data Streaming
+    POLYGON_API_KEY: Optional[str] = os.getenv("POLYGON_API_KEY")
+    POLYGON_WEBSOCKET_URL: str = "wss://socket.polygon.io/stocks"
+    IEX_API_KEY: Optional[str] = os.getenv("IEX_API_KEY")
+    IEX_WEBSOCKET_URL: str = "wss://cloud.iexapis.com/v1/stocks"
+
+    # Sentiment / News
+    NEWSAPI_KEY: Optional[str] = os.getenv("NEWSAPI_KEY")
+    FINNHUB_API_KEY: Optional[str] = os.getenv("FINNHUB_API_KEY")
+
+    # Stripe Billing
+    STRIPE_API_KEY: Optional[str] = os.getenv("STRIPE_API_KEY")
+    STRIPE_WEBHOOK_SECRET: Optional[str] = os.getenv("STRIPE_WEBHOOK_SECRET")
+
     # Email (for future use)
     SMTP_TLS: bool = True
     SMTP_PORT: Optional[int] = None

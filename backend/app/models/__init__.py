@@ -17,6 +17,7 @@ from app.models.portfolio import (
     Watchlist,
     WatchlistItem,
 )
+from app.models.subscription import SubscriptionPlan, UserSubscription, UsageRecord
 from app.models.user import User, UserSession
 
 __all__ = [
@@ -39,6 +40,10 @@ __all__ = [
     "DataUpdate",
     "ExternalApiLog",
     "ScreeningResult",
+    # Subscription models
+    "SubscriptionPlan",
+    "UserSubscription",
+    "UsageRecord",
     # Audit models
     "AuditLog",
 ]

@@ -40,11 +40,11 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             # Content Security Policy
             "Content-Security-Policy": (
                 "default-src 'self'; "
-                "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
+                "script-src 'self'; "
                 "style-src 'self' 'unsafe-inline'; "
                 "img-src 'self' data: https:; "
                 "font-src 'self' data:; "
-                "connect-src 'self' https:; "
+                "connect-src 'self' https: wss:; "
                 "frame-ancestors 'none'; "
                 "base-uri 'self'; "
                 "form-action 'self'"
@@ -322,9 +322,8 @@ class CORSMiddleware(BaseHTTPMiddleware):
         """Add CORS headers to response"""
         if origin and self._is_origin_allowed(origin):
             response.headers["Access-Control-Allow-Origin"] = origin
-        elif not origin:
-            # For same-origin requests
-            response.headers["Access-Control-Allow-Origin"] = "*"
+        # For same-origin requests (no origin header), CORS headers are not needed
+        # and must not be set to a wildcard value
         
         if self.allow_credentials:
             response.headers["Access-Control-Allow-Credentials"] = "true"

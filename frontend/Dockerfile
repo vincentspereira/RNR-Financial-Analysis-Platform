@@ -8,13 +8,16 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci --only=production && npm cache clean --force
+RUN npm ci && npm cache clean --force
 
 # Copy source code
 COPY . .
 
 # Build the application
 RUN npm run build
+
+# Prune devDependencies to keep only production deps in final image
+RUN npm prune --production
 
 # Production stage with NGINX
 FROM nginx:alpine as production
@@ -47,10 +50,10 @@ USER appuser
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:3030/health || exit 1
+    CMD curl -f http://localhost:80/health || exit 1
 
 # Expose port
-EXPOSE 3030
+EXPOSE 80
 
 # Start NGINX
 CMD ["nginx", "-g", "daemon off;"]

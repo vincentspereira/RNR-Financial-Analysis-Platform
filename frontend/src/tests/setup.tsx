@@ -60,22 +60,6 @@ vi.mock('react-chartjs-2', () => ({
   Pie: vi.fn(() => <div data-testid="pie-chart" />),
 }));
 
-// Mock Recharts
-vi.mock('recharts', () => ({
-  LineChart: vi.fn(({ children }) => <div data-testid="recharts-line">{children}</div>),
-  BarChart: vi.fn(({ children }) => <div data-testid="recharts-bar">{children}</div>),
-  PieChart: vi.fn(({ children }) => <div data-testid="recharts-pie">{children}</div>),
-  Line: vi.fn(() => <div data-testid="recharts-line-element" />),
-  Bar: vi.fn(() => <div data-testid="recharts-bar-element" />),
-  XAxis: vi.fn(() => <div data-testid="recharts-xaxis" />),
-  YAxis: vi.fn(() => <div data-testid="recharts-yaxis" />),
-  CartesianGrid: vi.fn(() => <div data-testid="recharts-grid" />),
-  Tooltip: vi.fn(() => <div data-testid="recharts-tooltip" />),
-  Legend: vi.fn(() => <div data-testid="recharts-legend" />),
-  ResponsiveContainer: vi.fn(({ children }) => <div data-testid="responsive-container">{children}</div>),
-  Cell: vi.fn(() => <div data-testid="recharts-cell" />),
-}));
-
 // Mock react-hot-toast
 vi.mock('react-hot-toast', () => ({
   default: {
@@ -192,26 +176,11 @@ afterAll(() => {
 import React from 'react';
 import { render, RenderOptions } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import { Provider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-
-// Mock store
-const createMockStore = (initialState = {}) => {
-  return configureStore({
-    reducer: {
-      auth: (state = { user: null, isAuthenticated: false }, action) => state,
-      portfolio: (state = { portfolios: [], currentPortfolio: null }, action) => state,
-      watchlist: (state = { watchlists: [], currentWatchlist: null }, action) => state,
-    },
-    preloadedState: initialState,
-  });
-};
 
 // Custom render with providers
 interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
   initialState?: any;
-  store?: any;
 }
 
 import { AuthProvider } from '@/contexts/AuthContext';
@@ -219,8 +188,6 @@ import { AuthProvider } from '@/contexts/AuthContext';
 export const renderWithProviders = (
   ui: React.ReactElement,
   {
-    initialState = {},
-    store = createMockStore(initialState),
     ...renderOptions
   }: CustomRenderOptions = {}
 ) => {
@@ -233,19 +200,16 @@ export const renderWithProviders = (
   });
 
   const Wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-    <Provider store={store}>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <BrowserRouter>
-            {children}
-          </BrowserRouter>
-        </AuthProvider>
-      </QueryClientProvider>
-    </Provider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <BrowserRouter>
+          {children}
+        </BrowserRouter>
+      </AuthProvider>
+    </QueryClientProvider>
   );
 
   return {
-    store,
     queryClient,
     ...render(ui, { wrapper: Wrapper, ...renderOptions }),
   };

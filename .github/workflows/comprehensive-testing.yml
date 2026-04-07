@@ -10,7 +10,7 @@ on:
     - cron: '0 2 * * *'
 
 env:
-  PYTHON_VERSION: '3.13'
+  PYTHON_VERSION: '3.11'
   NODE_VERSION: '18'
 
 jobs:
@@ -154,7 +154,7 @@ jobs:
       - name: Run integration tests
         run: |
           cd backend
-          pytest integration_tests/ -m "integration" \
+          pytest tests/integration/ -m "integration" \
             --html=reports/integration-tests.html \
             --json-report --json-report-file=reports/integration-tests.json \
             -v
@@ -233,7 +233,7 @@ jobs:
       - name: Run system tests
         run: |
           cd backend
-          pytest system_tests/ -m "system" \
+          pytest tests/system/ -m "system" \
             --html=reports/system-tests.html \
             --json-report --json-report-file=reports/system-tests.json \
             -v
@@ -269,7 +269,7 @@ jobs:
       - name: Run performance tests
         run: |
           cd backend
-          pytest performance_tests/ -m "performance" \
+          pytest tests/performance/ -m "performance" \
             --benchmark-only \
             --benchmark-sort=mean \
             --benchmark-json=reports/benchmark.json \
@@ -309,19 +309,19 @@ jobs:
       - name: Run Bandit security scan
         run: |
           cd backend
-          bandit -r app/ -f json -o reports/bandit-report.json || true
-          bandit -r app/ -f txt -o reports/bandit-report.txt || true
+          bandit -r app/ -f json -o reports/bandit-report.json
+          bandit -r app/ -f txt -o reports/bandit-report.txt
           
       - name: Run Safety vulnerability scan
         run: |
           cd backend
-          safety check --json --output reports/safety-report.json || true
-          safety check --output reports/safety-report.txt || true
+          safety check --json --output reports/safety-report.json
+          safety check --output reports/safety-report.txt
           
       - name: Run security tests
         run: |
           cd backend
-          pytest security_tests/ -m "security" \
+          pytest tests/security/ -m "security" \
             --html=reports/security-tests.html \
             --json-report --json-report-file=reports/security-tests.json \
             -v
@@ -500,7 +500,16 @@ jobs:
           
       - name: Generate comprehensive test report
         run: |
-          python scripts/generate_test_report.py test-results/ > comprehensive-test-report.md
+          echo "# Comprehensive Test Report" > comprehensive-test-report.md
+          echo "" >> comprehensive-test-report.md
+          echo "Generated on: $(date -u)" >> comprehensive-test-report.md
+          echo "" >> comprehensive-test-report.md
+          echo "## Test Artifacts" >> comprehensive-test-report.md
+          for dir in test-results/*/; do
+            echo "- $(basename "$dir")" >> comprehensive-test-report.md
+          done
+          echo "" >> comprehensive-test-report.md
+          echo "See individual test result artifacts for details." >> comprehensive-test-report.md
           
       - name: Upload comprehensive test report
         uses: actions/upload-artifact@v3

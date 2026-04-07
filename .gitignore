@@ -476,6 +476,7 @@ combined.log
 
 # MySQL
 *.sql
+!infrastructure/database/init.sql
 
 # MongoDB
 *.bson
@@ -565,6 +566,7 @@ docker-compose.prod.yml
 # Google Cloud
 .gcloud/
 *.json
+!infrastructure/monitoring/grafana/dashboards/*.json
 
 # Azure
 .azure/

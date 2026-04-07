@@ -152,8 +152,8 @@ async def predict_stock_price(request: StockPredictionRequest, background_tasks:
         )
         
     except Exception as e:
-        analytics_logger.error(f"Error predicting stock price for {request.symbol}: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to predict stock price: {str(e)}")
+        analytics_logger.error(f"Error predicting stock price for {request.symbol}: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Stock price prediction failed. Please try again later.")
 
 
 @router.post("/analyze/portfolio-risk", response_model=PortfolioRiskResponse)
@@ -195,8 +195,8 @@ async def analyze_portfolio_risk(request: PortfolioRiskRequest):
     except HTTPException:
         raise
     except Exception as e:
-        analytics_logger.error(f"Error analyzing portfolio risk: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to analyze portfolio risk: {str(e)}")
+        analytics_logger.error(f"Error analyzing portfolio risk: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Portfolio risk analysis failed. Please try again later.")
 
 
 @router.post("/signals/trading", response_model=TradingSignalsResponse)
@@ -238,8 +238,8 @@ async def generate_trading_signals(request: TradingSignalsRequest):
     except HTTPException:
         raise
     except Exception as e:
-        analytics_logger.error(f"Error generating trading signals for {request.symbol}: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to generate trading signals: {str(e)}")
+        analytics_logger.error(f"Error generating trading signals for {request.symbol}: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Trading signal generation failed. Please try again later.")
 
 
 @router.post("/optimize/portfolio", response_model=PortfolioOptimizationResponse)
@@ -276,8 +276,8 @@ async def optimize_portfolio(request: PortfolioOptimizationRequest):
     except HTTPException:
         raise
     except Exception as e:
-        analytics_logger.error(f"Error optimizing portfolio: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to optimize portfolio: {str(e)}")
+        analytics_logger.error(f"Error optimizing portfolio: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Portfolio optimization failed. Please try again later.")
 
 
 @router.get("/models/performance")

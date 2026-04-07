@@ -3,6 +3,7 @@
  */
 import React, { useState, useEffect } from 'react';
 import { cn } from '@/utils/cn';
+import { apiService } from '@/services/api';
 
 // Mock data interfaces (in a real app, these would come from API)
 interface StockPrediction {
@@ -74,39 +75,23 @@ const StockPredictionCard: React.FC = () => {
   const [selectedSymbol, setSelectedSymbol] = useState('AAPL');
 
   useEffect(() => {
-    // Mock data - in real app, fetch from API
-    setTimeout(() => {
-      setPredictions([
-        {
-          symbol: 'AAPL',
-          predicted_price: 185.50,
-          confidence_score: 0.78,
-          current_price: 178.25,
-          prediction_date: new Date().toISOString(),
-          model_used: 'Random Forest',
-          days_ahead: 30
-        },
-        {
-          symbol: 'GOOGL',
-          predicted_price: 142.80,
-          confidence_score: 0.72,
-          current_price: 138.90,
-          prediction_date: new Date().toISOString(),
-          model_used: 'Gradient Boosting',
-          days_ahead: 30
-        },
-        {
-          symbol: 'MSFT',
-          predicted_price: 378.20,
-          confidence_score: 0.81,
-          current_price: 372.15,
-          prediction_date: new Date().toISOString(),
-          model_used: 'Random Forest',
-          days_ahead: 30
+    const fetchPredictions = async () => {
+      try {
+        const response = await apiService.request({
+          method: 'GET',
+          url: '/api/v1/analytics/predictions/history',
+          params: { type: 'price_prediction' },
+        });
+        if (response.data?.predictions) {
+          setPredictions(response.data.predictions);
         }
-      ]);
-      setLoading(false);
-    }, 1000);
+      } catch (error) {
+        console.error('Failed to load predictions:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPredictions();
   }, []);
 
   const selectedPrediction = predictions.find(p => p.symbol === selectedSymbol);
@@ -196,19 +181,22 @@ const PortfolioRiskCard: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Mock data - in real app, fetch from API
-    setTimeout(() => {
-      setRiskData({
-        var_95: -0.045,
-        var_99: -0.078,
-        expected_return: 0.085,
-        volatility: 0.152,
-        sharpe_ratio: 0.559,
-        max_drawdown: -0.123,
-        predicted_risk_score: 0.62
-      });
-      setLoading(false);
-    }, 1200);
+    const fetchRiskData = async () => {
+      try {
+        const response = await apiService.request({
+          method: 'POST',
+          url: '/api/v1/analytics/analyze/portfolio-risk',
+        });
+        if (response.data) {
+          setRiskData(response.data);
+        }
+      } catch (error) {
+        console.error('Failed to load risk data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchRiskData();
   }, []);
 
   const getRiskLevel = (score: number) => {
@@ -284,33 +272,22 @@ const TradingSignalsCard: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Mock data - in real app, fetch from API
-    setTimeout(() => {
-      setSignals([
-        {
-          symbol: 'AAPL',
-          current_signal: 'BUY',
-          signal_strength: 0.78,
-          confidence: 0.82,
-          technical_indicators: { rsi: 45.2, macd: 1.23, sma_20: 175.50 }
-        },
-        {
-          symbol: 'GOOGL',
-          current_signal: 'HOLD',
-          signal_strength: 0.45,
-          confidence: 0.67,
-          technical_indicators: { rsi: 52.8, macd: -0.45, sma_20: 140.25 }
-        },
-        {
-          symbol: 'MSFT',
-          current_signal: 'SELL',
-          signal_strength: 0.65,
-          confidence: 0.74,
-          technical_indicators: { rsi: 68.9, macd: -2.15, sma_20: 375.80 }
+    const fetchSignals = async () => {
+      try {
+        const response = await apiService.request({
+          method: 'POST',
+          url: '/api/v1/analytics/signals/trading',
+        });
+        if (response.data?.signals) {
+          setSignals(response.data.signals);
         }
-      ]);
-      setLoading(false);
-    }, 800);
+      } catch (error) {
+        console.error('Failed to load trading signals:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchSignals();
   }, []);
 
   const getSignalColor = (signal: string) => {
@@ -375,23 +352,22 @@ const PortfolioOptimizationCard: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Mock data - in real app, fetch from API
-    setTimeout(() => {
-      setOptimization({
-        optimized_weights: {
-          'AAPL': 0.25,
-          'GOOGL': 0.20,
-          'MSFT': 0.22,
-          'TSLA': 0.15,
-          'AMZN': 0.18
-        },
-        expected_annual_return: 0.095,
-        expected_annual_risk: 0.168,
-        sharpe_ratio: 0.565,
-        recommendation: 'Balanced allocation with tech focus for moderate risk tolerance'
-      });
-      setLoading(false);
-    }, 1500);
+    const fetchOptimization = async () => {
+      try {
+        const response = await apiService.request({
+          method: 'POST',
+          url: '/api/v1/analytics/optimize/portfolio',
+        });
+        if (response.data) {
+          setOptimization(response.data);
+        }
+      } catch (error) {
+        console.error('Failed to load optimization:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchOptimization();
   }, []);
 
   return (

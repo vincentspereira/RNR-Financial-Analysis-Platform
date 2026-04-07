@@ -29,16 +29,10 @@ export default defineConfig({
     },
     // Optimize chunk size
     chunkSizeWarningLimit: 1000,
-    // Enable source maps for production debugging
-    sourcemap: true,
+    // Source maps only in development
+    sourcemap: process.env.NODE_ENV !== 'production',
     // Minification
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true, // Remove console.log in production
-        drop_debugger: true,
-      },
-    },
+    minify: 'esbuild',
     // Asset optimization
     assetsInlineLimit: 4096, // Inline assets smaller than 4kb
   },
@@ -64,11 +58,6 @@ export default defineConfig({
   // CSS optimization
   css: {
     devSourcemap: true,
-    preprocessorOptions: {
-      scss: {
-        additionalData: `@import "@/styles/variables.scss";`,
-      },
-    },
   },
   // Test configuration
   test: {

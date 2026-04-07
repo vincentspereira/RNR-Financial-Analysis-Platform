@@ -23,6 +23,8 @@ class MetricPoint:
     timestamp: datetime
     value: float
     tags: Dict[str, str] = field(default_factory=dict)
+
+
 @dataclass
 class PerformanceMetrics:
     """Performance metrics container"""
@@ -35,6 +37,8 @@ class PerformanceMetrics:
     p99_response_time: float = 0.0
     error_rate: float = 0.0
     throughput: float = 0.0
+
+
 class MetricsCollector:
     """Centralized metrics collection system"""
 
@@ -52,6 +56,7 @@ class MetricsCollector:
             key = self._build_key(name, tags)
             self.counters[key] += value
             self._add_metric_point(name, value, tags)
+
     def set_gauge(self, name: str, value: float, tags: Dict[str, str] = None):
         with self._lock:
             key = self._build_key(name, tags)
@@ -73,11 +78,13 @@ class MetricsCollector:
             if len(self.timers[key]) > 1000:
                 self.timers[key] = self.timers[key][-1000:]
             self._add_metric_point(name, duration, tags)
+
     def _build_key(self, name: str, tags: Dict[str, str] = None) -> str:
         if not tags:
             return name
         tag_str = ",".join(f"{k}={v}" for k, v in sorted(tags.items()))
         return f"{name}[{tag_str}]"
+
     def _add_metric_point(self, name: str, value: float, tags: Dict[str, str] = None):
         point = MetricPoint(
             timestamp=datetime.now(timezone.utc),
@@ -85,6 +92,7 @@ class MetricsCollector:
             tags=tags or {}
         )
         self.metrics[name].append(point)
+
     def get_counter(self, name: str, tags: Dict[str, str] = None) -> int:
         key = self._build_key(name, tags)
         return self.counters.get(key, 0)
@@ -92,6 +100,7 @@ class MetricsCollector:
     def get_gauge(self, name: str, tags: Dict[str, str] = None) -> float:
         key = self._build_key(name, tags)
         return self.gauges.get(key, 0.0)
+
     def get_histogram_stats(self, name: str, tags: Dict[str, str] = None) -> Dict[str, float]:
         key = self._build_key(name, tags)
         values = self.histograms.get(key, [])
@@ -147,8 +156,12 @@ class MetricsCollector:
             self.histograms.clear()
             self.timers.clear()
             self.metrics.clear()
+
+
 # Global metrics collector
 metrics = MetricsCollector()
+
+
 class PerformanceMonitor:
     """Performance monitoring utilities"""
 
@@ -174,6 +187,7 @@ class PerformanceMonitor:
             except asyncio.CancelledError:
                 pass
         monitor_logger.logger.info("Performance monitoring stopped")
+
     async def _collect_system_metrics(self, interval: int):
         """Collect system metrics periodically"""
         while self._monitoring:
@@ -204,6 +218,7 @@ class PerformanceMonitor:
             except Exception as e:
                 monitor_logger.logger.error(f"Error collecting system metrics: {str(e)}")
                 await asyncio.sleep(interval)
+
     async def collect_system_metrics(self) -> Dict[str, Any]:
         """Collect and return current system metrics"""
         try:
@@ -235,6 +250,7 @@ class PerformanceMonitor:
         except Exception as e:
             monitor_logger.logger.error(f"Error collecting system metrics: {str(e)}")
             return {}
+
     def get_performance_summary(self) -> Dict[str, Any]:
         return {
             "system": {
@@ -251,10 +267,14 @@ class PerformanceMonitor:
                 "cache_misses": metrics.get_counter("cache.misses"),
             }
         }
+
+
 # Global instances
 metrics_collector = metrics
 performance_monitor = PerformanceMonitor()
 alert_manager = None  # Initialized below
+
+
 def monitor_performance(
     metric_name: str = None,
     tags: Dict[str, str] = None,
@@ -279,6 +299,7 @@ def monitor_performance(
             finally:
                 duration = (time.time() - start_time) * 1000
                 metrics.record_timer(f"{name}.duration", duration, tags=tags)
+
         @wraps(func)
         def sync_wrapper(*args, **kwargs):
             name = metric_name or f"{func.__module__}.{func.__name__}"
@@ -296,11 +317,15 @@ def monitor_performance(
             finally:
                 duration = (time.time() - start_time) * 1000
                 metrics.record_timer(f"{name}.duration", duration, tags=tags)
+
         if asyncio.iscoroutinefunction(func):
             return async_wrapper
         else:
             return sync_wrapper
+
     return decorator
+
+
 class AlertManager:
     """Alert management for performance thresholds"""
 
@@ -314,6 +339,7 @@ class AlertManager:
         }
         self.alert_cooldown = 300
         self.last_alerts = {}
+
     def check_thresholds(self) -> List[Dict[str, Any]]:
         alerts = []
         current_time = datetime.now(timezone.utc)
@@ -361,6 +387,7 @@ class AlertManager:
             if self._should_send_alert("high_memory_usage", current_time):
                 alerts.append(alert)
         return alerts
+
     def _create_alert(self, alert_type: str, message: str, severity: str, data: Dict[str, Any]) -> Dict[str, Any]:
         return {
             "type": alert_type,
@@ -369,6 +396,7 @@ class AlertManager:
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "data": data
         }
+
     def _should_send_alert(self, alert_type: str, current_time: datetime) -> bool:
         last_alert_time = self.last_alerts.get(alert_type)
         if not last_alert_time:
@@ -378,13 +406,20 @@ class AlertManager:
             self.last_alerts[alert_type] = current_time
             return True
         return False
+
+
 # Initialize alert_manager after class definition
 alert_manager = AlertManager()
+
 # Convenience functions
 async def start_monitoring():
     await performance_monitor.start_monitoring()
+
+
 async def stop_monitoring():
     await performance_monitor.stop_monitoring()
+
+
 def get_metrics_summary() -> Dict[str, Any]:
     return {
         "performance": performance_monitor.get_performance_summary(),

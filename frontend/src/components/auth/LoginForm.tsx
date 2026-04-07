@@ -19,7 +19,7 @@ const loginSchema = z.object({
   password: z
     .string()
     .min(1, 'Password is required')
-    .min(12,'Password must be at least 6 characters'),
+    .min(12, 'Password must be at least 12 characters'),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -174,7 +174,8 @@ export function LoginForm() {
           </div>
         </form>
 
-        {/* Demo Credentials */}
+        {/* Demo Credentials - Development Only */}
+        {import.meta.env.DEV && (
         <div className="mt-6 p-4 bg-gray-50 rounded-lg">
           <h3 className="text-sm font-medium text-gray-700 mb-2">Demo Credentials</h3>
           <div className="text-xs text-gray-600 space-y-1">
@@ -182,6 +183,7 @@ export function LoginForm() {
             <p><strong>Password:</strong> Demo123!</p>
           </div>
         </div>
+        )}
       </div>
     </div>
   );

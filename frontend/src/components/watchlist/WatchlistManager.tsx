@@ -30,6 +30,7 @@ import {
   MarketData 
 } from '@/types/watchlist';
 import toast from 'react-hot-toast';
+import { apiService } from '@/services/api';
 
 interface WatchlistManagerProps {
   onAnalyzeCompany?: (symbol: string) => void;
@@ -162,15 +163,21 @@ export function WatchlistManager({ onAnalyzeCompany }: WatchlistManagerProps) {
   const loadWatchlists = async () => {
     try {
       setIsLoading(true);
-      
-      // In a real app, this would fetch from the API
-      setTimeout(() => {
-        setWatchlists(mockWatchlists);
-        setCategories(mockCategories);
-        setSelectedWatchlist(mockWatchlists[0]?.id || null);
-        setIsLoading(false);
-      }, 1000);
-      
+
+      // Fetch real watchlist data from API
+      const response = await apiService.request({
+        method: 'GET',
+        url: '/api/v1/watchlist/',
+      });
+
+      if (response.data) {
+        const fetched = response.data.watchlists || response.data;
+        if (Array.isArray(fetched) && fetched.length > 0) {
+          setWatchlists(fetched);
+          setSelectedWatchlist(fetched[0]?.id || null);
+        }
+      }
+
     } catch (error) {
       console.error('Failed to load watchlists:', error);
       toast.error('Failed to load watchlists');

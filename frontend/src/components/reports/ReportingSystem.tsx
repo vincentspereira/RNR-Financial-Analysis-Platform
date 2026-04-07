@@ -22,6 +22,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { apiService } from '@/services/api';
 
 interface Report {
   id: string;
@@ -213,14 +214,20 @@ export function ReportingSystem() {
   const loadReports = async () => {
     try {
       setIsLoading(true);
-      
-      // In a real app, this would fetch from the API
-      setTimeout(() => {
-        setReports(mockReports);
-        setTemplates(mockTemplates);
-        setIsLoading(false);
-      }, 1000);
-      
+
+      // Fetch real reports data from API
+      const [reportsRes, templatesRes] = await Promise.all([
+        apiService.request({ method: 'GET', url: '/api/v1/reports/history' }),
+        apiService.request({ method: 'GET', url: '/api/v1/reports/templates' }),
+      ]);
+
+      if (reportsRes.data?.reports) {
+        setReports(reportsRes.data.reports);
+      }
+      if (templatesRes.data?.templates) {
+        setTemplates(templatesRes.data.templates);
+      }
+
     } catch (error) {
       console.error('Failed to load reports:', error);
       toast.error('Failed to load reports');

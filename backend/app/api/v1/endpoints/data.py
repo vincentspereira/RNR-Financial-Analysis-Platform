@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Header
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_async_session
+from app.core.logging import get_logger
 from app.schemas.auth import ErrorResponse
 from app.schemas.data import (
     BatchDataIngestionRequest,
@@ -27,6 +28,7 @@ from app.services.auth.auth_service import auth_service
 from app.services.data.data_ingestion_service import data_ingestion_service
 
 router = APIRouter(prefix="/data", tags=["Data Ingestion"])
+logger = get_logger("data.api")
 
 
 async def get_current_user_from_token(
@@ -107,9 +109,10 @@ async def ingest_company_data(
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Data ingestion failed: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Data ingestion failed: {str(e)}"
+            detail="Data processing failed. Please try again later."
         )
 
 
@@ -173,9 +176,10 @@ async def batch_ingest_company_data(
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Batch ingestion failed: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Batch ingestion failed: {str(e)}"
+            detail="Batch processing failed. Please try again later."
         )
 
 
@@ -221,9 +225,10 @@ async def get_data_sources_status(
         )
         
     except Exception as e:
+        logger.error(f"Failed to get data sources status: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get data sources status: {str(e)}"
+            detail="Failed to retrieve data sources status. Please try again later."
         )
 
 
@@ -291,9 +296,10 @@ async def get_latest_company_data(
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Failed to get company data: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get company data: {str(e)}"
+            detail="Failed to retrieve company data. Please try again later."
         )
 
 
@@ -372,9 +378,10 @@ async def get_company_market_data(
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Failed to get market data: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get market data: {str(e)}"
+            detail="Failed to retrieve market data. Please try again later."
         )
 
 
@@ -476,7 +483,8 @@ async def get_data_ingestion_stats(
         )
         
     except Exception as e:
+        logger.error(f"Failed to get statistics: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get statistics: {str(e)}"
+            detail="Failed to retrieve statistics. Please try again later."
         )

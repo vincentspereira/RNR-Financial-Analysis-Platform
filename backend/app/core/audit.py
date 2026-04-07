@@ -3,7 +3,7 @@ Comprehensive audit logging system for security and compliance
 """
 import json
 import hashlib
-from datetime import datetime, timezone, timezone
+from datetime import datetime, timezone
 from typing import Any, Dict, Optional, List
 from enum import Enum
 from uuid import UUID, uuid4

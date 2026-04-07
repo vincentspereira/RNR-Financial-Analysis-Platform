@@ -4,7 +4,7 @@ WebSocket server implementation for real-time features
 import json
 import asyncio
 from typing import Dict, List, Set, Optional, Any
-from datetime import datetime, timezone, timezone
+from datetime import datetime, timezone
 from uuid import uuid4
 from enum import Enum
 

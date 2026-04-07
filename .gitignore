@@ -509,9 +509,6 @@ dump.rdb
 .env.production.local
 .env.staging
 .env.production
-.env.example
-.env.sample
-.env.template
 
 # API Keys and secrets
 secrets/

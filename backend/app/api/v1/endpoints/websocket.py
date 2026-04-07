@@ -56,8 +56,12 @@ async def websocket_endpoint(websocket: WebSocket):
 
 
 @router.get("/ws/stats")
-async def get_websocket_stats():
-    """Get WebSocket connection statistics"""
+async def get_websocket_stats(
+    current_user: User = Depends(get_current_user),
+):
+    """Get WebSocket connection statistics (admin only)"""
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
     try:
         stats = websocket_manager.get_connection_stats()
         return {"status": "success", "data": stats}
@@ -163,7 +167,9 @@ async def update_portfolio(
     data: dict,
     current_user: User = Depends(get_current_user),
 ):
-    """Update portfolio data (internal API endpoint)"""
+    """Update portfolio data (admin only)"""
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
     try:
         portfolio_update = WebSocketMessage(
             type=MessageType.PORTFOLIO_UPDATE,

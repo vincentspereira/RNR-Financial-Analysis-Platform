@@ -9,6 +9,10 @@ from datetime import datetime
 from pydantic import BaseModel, validator, ValidationError
 from fastapi import HTTPException, status
 
+from app.core.logging import get_logger
+
+logger = get_logger("validation")
+
 
 class InputValidationError(Exception):
     """Custom validation error"""
@@ -249,12 +253,14 @@ def validate_request_data(data: Dict[str, Any], validation_model: BaseModel) -> 
         validated = validation_model(**data)
         return validated.dict()
     except ValidationError as e:
+        logger.error(f"Validation error: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Validation error: {str(e)}"
+            detail="Request validation failed. Please check your input and try again."
         )
     except Exception as e:
+        logger.error(f"Invalid request data: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid request data: {str(e)}"
+            detail="Invalid request data. Please check your input and try again."
         )

@@ -2,10 +2,9 @@
 Configuration settings for the Financial Analysis Platform
 """
 import os
-import secrets
 from typing import Any, Dict, List, Optional, Union
 
-from pydantic import AnyHttpUrl, EmailStr, field_validator, ConfigDict
+from pydantic import AnyHttpUrl, EmailStr, field_validator, ConfigDict, model_validator
 from pydantic_settings import BaseSettings
 
 
@@ -24,10 +23,19 @@ class Settings(BaseSettings):
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
     ENVIRONMENT: str = "development"
-    DEBUG: bool = True
+    DEBUG: bool = False
 
-    # Security - CRITICAL: Use environment variables for production
-    SECRET_KEY: str = os.getenv("SECRET_KEY") or secrets.token_urlsafe(32)
+    # Security - CRITICAL: Must be set via environment variable or .env file
+    SECRET_KEY: str = ""
+
+    @model_validator(mode="after")
+    def validate_secret_key(self):
+        if not self.SECRET_KEY or self.SECRET_KEY == "change-me-to-a-random-string":
+            raise ValueError(
+                "SECRET_KEY must be set in environment or .env file. "
+                "Generate one with: python -c \"import secrets; print(secrets.token_urlsafe(32))\""
+            )
+        return self
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7

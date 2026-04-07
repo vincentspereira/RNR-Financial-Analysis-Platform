@@ -116,8 +116,8 @@ async def generate_report(
         )
         
     except Exception as e:
-        reports_logger.error(f"Error generating report: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to generate report: {str(e)}")
+        reports_logger.error(f"Error generating report: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Report generation failed. Please try again later.")
 
 
 @router.post("/generate/custom", response_model=ReportResponse)
@@ -166,8 +166,8 @@ async def generate_custom_report(request: CustomReportRequest):
         )
         
     except Exception as e:
-        reports_logger.error(f"Error generating custom report: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to generate custom report: {str(e)}")
+        reports_logger.error(f"Error generating custom report: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Custom report generation failed. Please try again later.")
 
 
 @router.get("/download/{report_id}")
@@ -261,8 +261,8 @@ async def schedule_report(request: ScheduledReportRequest):
     except HTTPException:
         raise
     except Exception as e:
-        reports_logger.error(f"Error scheduling report: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to schedule report: {str(e)}")
+        reports_logger.error(f"Error scheduling report: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Report scheduling failed. Please try again later.")
 
 
 @router.get("/scheduled")

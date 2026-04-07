@@ -22,6 +22,7 @@ import {
   Filter,
 } from 'lucide-react';
 import { DataSourceConfig } from '@/types/watchlist';
+import { apiService } from '@/services/api';
 import toast from 'react-hot-toast';
 
 interface DataSource {
@@ -203,15 +204,13 @@ export function DataManagement() {
   const loadDataManagement = async () => {
     try {
       setIsLoading(true);
-      
-      // In a real app, this would fetch from the API
-      setTimeout(() => {
-        setDataSources(mockDataSources);
-        setPipelines(mockPipelines);
-        setQualityMetrics(mockQualityMetrics);
-        setIsLoading(false);
-      }, 1000);
-      
+
+      // Fetch real data sources from API
+      const sourcesResponse = await apiService.getDataSourcesStatus();
+      if (sourcesResponse) {
+        setDataSources(sourcesResponse);
+      }
+
     } catch (error) {
       console.error('Failed to load data management:', error);
       toast.error('Failed to load data management');

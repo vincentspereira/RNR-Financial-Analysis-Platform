@@ -193,25 +193,22 @@ export function Analysis() {
     setIsLoading(true);
     
     try {
-      // In a real app, this would fetch actual data from the API
-      // const ratiosResponse = await apiService.calculateFinancialRatios({
-      //   company_id: company.id,
-      //   period_type: 'annual',
-      //   fiscal_year: 2023
-      // });
-      
-      // For now, use mock data
-      setTimeout(() => {
-        setAnalysis({
-          company,
-          financial_statement: {} as any, // Would be populated with real data
-          ratios: mockRatios,
-          valuation_models: mockValuationModels,
-        });
-        setIsLoading(false);
-        toast.success(`Analysis loaded for ${company.name}`);
-      }, 1000);
-      
+      // Fetch real analysis data from API
+      const ratiosResponse = await apiService.calculateFinancialRatios({
+        company_id: company.id,
+        period_type: 'annual',
+        fiscal_year: new Date().getFullYear(),
+      });
+
+      setAnalysis({
+        company,
+        financial_statement: ratiosResponse?.financial_statement || ({} as any),
+        ratios: ratiosResponse?.ratios || mockRatios,
+        valuation_models: ratiosResponse?.valuation_models || mockValuationModels,
+      });
+      setIsLoading(false);
+      toast.success(`Analysis loaded for ${company.name}`);
+
     } catch (error) {
       console.error('Failed to load analysis:', error);
       toast.error('Failed to load company analysis');

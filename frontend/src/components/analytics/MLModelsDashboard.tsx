@@ -30,6 +30,7 @@ import {
 } from '@/types/analytics';
 import { FinancialChart } from '@/components/charts/FinancialChart';
 import toast from 'react-hot-toast';
+import { apiService } from '@/services/api';
 
 export function MLModelsDashboard() {
   const [models, setModels] = useState<MLModel[]>([]);
@@ -175,14 +176,20 @@ export function MLModelsDashboard() {
   const loadMLModels = async () => {
     try {
       setIsLoading(true);
-      
-      // In a real app, this would fetch from the API
-      setTimeout(() => {
-        setModels(mockModels);
-        setPredictions(mockPredictions);
-        setIsLoading(false);
-      }, 1000);
-      
+
+      // Fetch real ML model data from API
+      const [modelsRes, predictionsRes] = await Promise.all([
+        apiService.request({ method: 'GET', url: '/api/v1/analytics/models/performance' }),
+        apiService.request({ method: 'GET', url: '/api/v1/analytics/predictions/history' }),
+      ]);
+
+      if (modelsRes.data?.models) {
+        setModels(modelsRes.data.models);
+      }
+      if (predictionsRes.data?.predictions) {
+        setPredictions(predictionsRes.data.predictions);
+      }
+
     } catch (error) {
       console.error('Failed to load ML models:', error);
       toast.error('Failed to load ML models');

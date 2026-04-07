@@ -27,6 +27,7 @@ import {
 } from '@/types/analytics';
 import { FinancialChart } from '@/components/charts/FinancialChart';
 import toast from 'react-hot-toast';
+import { apiService } from '@/services/api';
 
 interface PredictiveAnalyticsProps {
   symbol?: string;
@@ -165,16 +166,21 @@ export function PredictiveAnalytics({ symbol = 'AAPL', timeframe = '1m' }: Predi
   const loadPredictiveAnalytics = async () => {
     try {
       setIsLoading(true);
-      
-      // In a real app, this would fetch from the API
-      setTimeout(() => {
-        setTrends(mockTrends);
-        setSentiment(mockSentiment);
-        setRiskAssessment(mockRiskAssessment);
-        setAnomalies(mockAnomalies);
-        setIsLoading(false);
-      }, 1000);
-      
+
+      // Fetch real predictive analytics from API
+      const response = await apiService.request({
+        method: 'GET',
+        url: '/api/v1/analytics/predictions/history',
+        params: { symbol, timeframe: selectedTimeframe },
+      });
+
+      if (response.data) {
+        setTrends(response.data.trends || []);
+        setSentiment(response.data.sentiment || null);
+        setRiskAssessment(response.data.risk_assessment || null);
+        setAnomalies(response.data.anomalies || []);
+      }
+
     } catch (error) {
       console.error('Failed to load predictive analytics:', error);
       toast.error('Failed to load predictive analytics');

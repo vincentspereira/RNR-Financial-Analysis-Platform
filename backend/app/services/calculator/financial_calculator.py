@@ -9,6 +9,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.company import Company, FinancialStatement, FinancialRatio, MarketData
+from app.core.logging import get_logger
+
+logger = get_logger("app.services.calculator.financial_calculator")
 from app.services.calculator.ratio_calculator import ratio_calculator
 from app.services.calculator.valuation_calculator import valuation_calculator
 
@@ -84,7 +87,7 @@ class FinancialCalculator:
             return financial_data
             
         except Exception as e:
-            print(f"Error getting financial data: {e}")
+            logger.error("Error getting financial data: %s", e, exc_info=True)
             return None
     
     async def calculate_financial_ratios(
@@ -198,7 +201,7 @@ class FinancialCalculator:
             
         except Exception as e:
             await db.rollback()
-            print(f"Error saving ratios: {e}")
+            logger.error("Error saving ratios: %s", e, exc_info=True)
             return False
     
     async def calculate_company_valuation(
@@ -279,7 +282,7 @@ class FinancialCalculator:
             }
             
         except Exception as e:
-            print(f"Error calculating valuation: {e}")
+            logger.error("Error calculating valuation: %s", e, exc_info=True)
             return None
     
     async def get_peer_comparison(
@@ -334,7 +337,7 @@ class FinancialCalculator:
             return comparison_data
             
         except Exception as e:
-            print(f"Error in peer comparison: {e}")
+            logger.error("Error in peer comparison: %s", e, exc_info=True)
             return None
     
     def _calculate_peer_statistics(self, peer_data: List[Dict[str, Any]]) -> Dict[str, Any]:

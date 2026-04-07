@@ -52,7 +52,7 @@ class StructuredFormatter(logging.Formatter):
             log_entry["exception"] = {
                 "type": record.exc_info[0].__name__,
                 "message": str(record.exc_info[1]),
-                "traceback": ''.join(traceback.format_exception(*record.exc_info))''
+                "traceback": ''.join(traceback.format_exception(*record.exc_info))
             }
         
         # Add extra fields from the log record

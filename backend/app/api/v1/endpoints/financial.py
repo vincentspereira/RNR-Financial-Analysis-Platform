@@ -15,13 +15,13 @@ from app.schemas.auth import ErrorResponse
 from app.schemas.financial import (
     BatchRatiosRequest,
     BatchRatiosResponse,
-    CompanyFinancialDataResponse
-    FinancialHealthScore
-    FinancialRatiosRequest
-    FinancialRatiosResponse
-    PeerComparisonRequest
-    PeerComparisonResponse
-    ValuationRequest
+    CompanyFinancialDataResponse,
+    FinancialHealthScore,
+    FinancialRatiosRequest,
+    FinancialRatiosResponse,
+    PeerComparisonRequest,
+    PeerComparisonResponse,
+    ValuationRequest,
     ValuationResponse,
 )
 from app.services.calculator.financial_calculator import financial_calculator

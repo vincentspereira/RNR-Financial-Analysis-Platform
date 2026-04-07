@@ -30,6 +30,7 @@ import {
   AlertNotification 
 } from '@/types/watchlist';
 import toast from 'react-hot-toast';
+import { apiService } from '@/services/api';
 
 interface AlertManagerProps {
   watchlistItemId?: string;
@@ -152,15 +153,19 @@ export function AlertManager({
   const loadAlerts = async () => {
     try {
       setIsLoading(true);
-      
-      // In a real app, this would fetch from the API
-      setTimeout(() => {
-        setAlerts(mockAlerts);
-        setNotifications(mockNotifications);
-        setTemplates(mockTemplates);
-        setIsLoading(false);
-      }, 500);
-      
+
+      // Fetch real alert data from API
+      const response = await apiService.request({
+        method: 'GET',
+        url: `/api/v1/watchlist/${watchlistItemId}/alerts`,
+      });
+
+      if (response.data) {
+        setAlerts(response.data.alerts || []);
+        setNotifications(response.data.notifications || []);
+        setTemplates(response.data.templates || []);
+      }
+
     } catch (error) {
       console.error('Failed to load alerts:', error);
       toast.error('Failed to load alerts');

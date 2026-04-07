@@ -24,7 +24,7 @@ const registerSchema = z.object({
   password: z
     .string()
     .min(1, 'Password is required')
-    .min(12,'Password must be at least 8 characters')
+    .min(12, 'Password must be at least 12 characters')
     .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
     .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
     .regex(/[0-9]/, 'Password must contain at least one number')
@@ -69,7 +69,7 @@ export function RegisterForm() {
     if (!password) return { strength: 0, label: '', color: '' };
     
     let strength = 0;
-    if (password.length >= 8) strength++;
+    if (password.length >= 12) strength++;
     if (/[A-Z]/.test(password)) strength++;
     if (/[a-z]/.test(password)) strength++;
     if (/[0-9]/.test(password)) strength++;

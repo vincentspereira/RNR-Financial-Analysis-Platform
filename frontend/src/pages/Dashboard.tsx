@@ -49,14 +49,23 @@ export function Dashboard() {
   const loadDashboardData = async () => {
     try {
       setIsLoading(true);
-      
-      // Load health status
+
+      // Load health status from API
       const health = await apiService.healthCheck();
       setHealthStatus(health);
-      
-      // In a real app, you would load actual portfolio data here
-      // For now, we'll use mock data
-      
+
+      // Load dashboard stats from API
+      try {
+        const response = await apiService.request({
+          method: 'GET',
+          url: '/api/v1/analytics/dashboard',
+        });
+        if (response.data) {
+          setStats(response.data);
+        }
+      } catch {
+        // Dashboard stats fallback to defaults if endpoint unavailable
+      }
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
     } finally {

@@ -9,6 +9,10 @@ import json
 import yfinance as yf
 import pandas as pd
 
+from app.core.logging import get_logger
+
+logger = get_logger("app.services.data.yahoo_finance")
+
 
 class YahooFinanceClient:
     """
@@ -150,7 +154,7 @@ class YahooFinanceClient:
             }
             
         except Exception as e:
-            print(f"Error getting Yahoo Finance stock info for {symbol}: {e}")
+            logger.error("Error getting Yahoo Finance stock info for %s: %s", symbol, e, exc_info=True)
             return None
     
     async def get_historical_data(
@@ -205,7 +209,7 @@ class YahooFinanceClient:
             return records
             
         except Exception as e:
-            print(f"Error getting historical data for {symbol}: {e}")
+            logger.error("Error getting historical data for %s: %s", symbol, e, exc_info=True)
             return None
     
     async def get_financials(self, symbol: str) -> Optional[Dict[str, Any]]:
@@ -337,7 +341,7 @@ class YahooFinanceClient:
             return result if result else None
             
         except Exception as e:
-            print(f"Error getting financials for {symbol}: {e}")
+            logger.error("Error getting financials for %s: %s", symbol, e, exc_info=True)
             return None
     
     async def get_analyst_recommendations(self, symbol: str) -> Optional[List[Dict[str, Any]]]:
@@ -372,7 +376,7 @@ class YahooFinanceClient:
             return recs
             
         except Exception as e:
-            print(f"Error getting analyst recommendations for {symbol}: {e}")
+            logger.error("Error getting analyst recommendations for %s: %s", symbol, e, exc_info=True)
             return None
     
     async def get_earnings_calendar(self, symbol: str) -> Optional[Dict[str, Any]]:
@@ -405,7 +409,7 @@ class YahooFinanceClient:
             return result
             
         except Exception as e:
-            print(f"Error getting earnings calendar for {symbol}: {e}")
+            logger.error("Error getting earnings calendar for %s: %s", symbol, e, exc_info=True)
             return None
     
     def _safe_float(self, value: Any) -> Optional[float]:

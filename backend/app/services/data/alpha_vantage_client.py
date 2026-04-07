@@ -10,6 +10,9 @@ import aiohttp
 from requests_ratelimiter import LimiterSession
 
 from app.core.config import settings
+from app.core.logging import get_logger
+
+logger = get_logger("app.services.data.alpha_vantage")
 
 
 class AlphaVantageClient:
@@ -63,20 +66,20 @@ class AlphaVantageClient:
                     
                     # Check for API errors
                     if 'Error Message' in data:
-                        print(f"Alpha Vantage API Error: {data['Error Message']}")
+                        logger.warning("Alpha Vantage API error: %s", data['Error Message'])
                         return None
                     
                     if 'Note' in data:
-                        print(f"Alpha Vantage API Note: {data['Note']}")
+                        logger.warning("Alpha Vantage API note: %s", data['Note'])
                         return None
                     
                     return data
                 else:
-                    print(f"Alpha Vantage API request failed: {response.status}")
+                    logger.error("Alpha Vantage API request failed with status: %s", response.status)
                     return None
                     
         except Exception as e:
-            print(f"Alpha Vantage API request error: {e}")
+            logger.error("Alpha Vantage API request error: %s", e, exc_info=True)
             return None
     
     async def get_company_overview(self, symbol: str) -> Optional[Dict[str, Any]]:
@@ -148,7 +151,7 @@ class AlphaVantageClient:
                 'ex_dividend_date': data.get('ExDividendDate'),
             }
         except Exception as e:
-            print(f"Error transforming company overview data: {e}")
+            logger.error("Error transforming company overview data: %s", e, exc_info=True)
             return None
     
     async def get_income_statement(self, symbol: str) -> Optional[List[Dict[str, Any]]]:
@@ -203,7 +206,7 @@ class AlphaVantageClient:
                 }
                 statements.append(statement)
             except Exception as e:
-                print(f"Error processing income statement: {e}")
+                logger.error("Error processing income statement: %s", e, exc_info=True)
                 continue
         
         return statements
@@ -272,7 +275,7 @@ class AlphaVantageClient:
                 }
                 balance_sheets.append(balance_sheet)
             except Exception as e:
-                print(f"Error processing balance sheet: {e}")
+                logger.error("Error processing balance sheet: %s", e, exc_info=True)
                 continue
         
         return balance_sheets
@@ -332,7 +335,7 @@ class AlphaVantageClient:
                 }
                 cash_flows.append(cash_flow)
             except Exception as e:
-                print(f"Error processing cash flow: {e}")
+                logger.error("Error processing cash flow: %s", e, exc_info=True)
                 continue
         
         return cash_flows
@@ -376,7 +379,7 @@ class AlphaVantageClient:
                 }
                 prices.append(price_record)
             except Exception as e:
-                print(f"Error processing price data for {date_str}: {e}")
+                logger.error("Error processing price data for %s: %s", date_str, e, exc_info=True)
                 continue
         
         return {

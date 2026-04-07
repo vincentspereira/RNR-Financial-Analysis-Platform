@@ -10,6 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_async_session
+from app.core.security import SecurityConfig
 from app.models.audit import AuditLog
 from app.models.user import User, UserSession
 from app.services.auth.jwt_handler import jwt_handler
@@ -23,7 +24,7 @@ class AuthService:
     """
     Main authentication service handling user operations
     """
-    
+
     async def register_user(
         self,
         email: str,
@@ -34,44 +35,26 @@ class AuthService:
         ip_address: Optional[str] = None,
         user_agent: Optional[str] = None
     ) -> Tuple[Optional[User], Optional[str]]:
-        """
-        Register a new user
-        
-        Args:
-            email: User email address
-            password: Plain text password
-            first_name: User's first name
-            last_name: User's last name
-            db: Database session
-            ip_address: Client IP address
-            user_agent: Client user agent
-            
-        Returns:
-            Tuple of (User object, error message)
-        """
+        """Register a new user"""
         try:
-            # Check if user already exists
             existing_user = await self.get_user_by_email(email, db)
             if existing_user:
                 return None, "User with this email already exists"
-            
-            # Hash password
+
             hashed_password = password_handler.hash_password(password)
-            
-            # Create new user
+
             new_user = User(
                 email=email.lower().strip(),
                 password_hash=hashed_password,
                 first_name=first_name.strip(),
                 last_name=last_name.strip(),
                 is_active=True,
-                is_verified=False  # Email verification required
+                is_verified=False
             )
-            
+
             db.add(new_user)
-            await db.flush()  # Get the user ID
-            
-            # Create audit log
+            await db.flush()
+
             audit_log = AuditLog.create_log(
                 action="user_register",
                 resource_type="user",
@@ -87,15 +70,15 @@ class AuthService:
                 compliance_category="GDPR"
             )
             db.add(audit_log)
-            
+
             await db.commit()
             return new_user, None
-            
+
         except Exception as e:
             await db.rollback()
             logger.error(f"Registration failed: {str(e)}", exc_info=True)
             return None, "Registration failed. Please try again."
-    
+
     async def authenticate_user(
         self,
         email: str,
@@ -104,24 +87,20 @@ class AuthService:
         ip_address: Optional[str] = None,
         user_agent: Optional[str] = None
     ) -> Tuple[Optional[User], Optional[str]]:
-        """
-        Authenticate user credentials
-        
-        Args:
-            email: User email address
-            password: Plain text password
-            db: Database session
-            ip_address: Client IP address
-            user_agent: Client user agent
-            
-        Returns:
-            Tuple of (User object, error message)
-        """
+        """Authenticate user credentials with account lockout protection"""
         try:
+            # Check account lockout before proceeding
+            lockout_key = f"login_attempts:{email.lower().strip()}"
+            attempts = await self._get_failed_attempts(lockout_key)
+
+            if attempts >= SecurityConfig.MAX_LOGIN_ATTEMPTS:
+                lockout_remaining = await self._get_lockout_remaining(lockout_key)
+                return None, f"Account locked. Try again in {lockout_remaining} minutes."
+
             # Get user by email
             user = await self.get_user_by_email(email, db)
             if not user:
-                # Create audit log for failed login
+                await self._increment_failed_attempts(lockout_key)
                 audit_log = AuditLog.create_log(
                     action="login_failed",
                     resource_type="user",
@@ -134,9 +113,9 @@ class AuthService:
                 db.add(audit_log)
                 await db.commit()
                 return None, "Invalid email or password"
-            
-            # Check if user is active
+
             if not user.is_active:
+                await self._increment_failed_attempts(lockout_key)
                 audit_log = AuditLog.create_log(
                     action="login_failed",
                     resource_type="user",
@@ -150,9 +129,9 @@ class AuthService:
                 db.add(audit_log)
                 await db.commit()
                 return None, "Account is inactive"
-            
-            # Verify password
+
             if not password_handler.verify_password(password, user.password_hash):
+                await self._increment_failed_attempts(lockout_key)
                 audit_log = AuditLog.create_log(
                     action="login_failed",
                     resource_type="user",
@@ -166,11 +145,13 @@ class AuthService:
                 db.add(audit_log)
                 await db.commit()
                 return None, "Invalid email or password"
-            
+
+            # Successful login — clear failed attempts
+            await self._clear_failed_attempts(lockout_key)
+
             # Update last login
             user.last_login = datetime.now(timezone.utc)
-            
-            # Create successful login audit log
+
             audit_log = AuditLog.create_log(
                 action="login_success",
                 resource_type="user",
@@ -180,15 +161,15 @@ class AuthService:
                 compliance_category="SOX"
             )
             db.add(audit_log)
-            
+
             await db.commit()
             return user, None
-            
+
         except Exception as e:
             await db.rollback()
             logger.error(f"Authentication failed: {str(e)}", exc_info=True)
             return None, "Authentication failed. Please try again."
-    
+
     async def create_user_session(
         self,
         user: User,
@@ -197,36 +178,20 @@ class AuthService:
         user_agent: Optional[str] = None,
         device_fingerprint: Optional[str] = None
     ) -> Tuple[Optional[Dict[str, str]], Optional[str]]:
-        """
-        Create a new user session with tokens
-        
-        Args:
-            user: User object
-            db: Database session
-            ip_address: Client IP address
-            user_agent: Client user agent
-            device_fingerprint: Device fingerprint for security
-            
-        Returns:
-            Tuple of (token dictionary, error message)
-        """
+        """Create a new user session with tokens"""
         try:
-            # Create token pair
             tokens = jwt_handler.create_token_pair(user.id)
-            
-            # Hash tokens for storage
+
             access_token_hash = hashlib.sha256(
                 tokens["access_token"].encode()
             ).hexdigest()
             refresh_token_hash = hashlib.sha256(
                 tokens["refresh_token"].encode()
             ).hexdigest()
-            
-            # Get token expiration times
+
             access_exp = jwt_handler.get_token_expiration(tokens["access_token"])
             refresh_exp = jwt_handler.get_token_expiration(tokens["refresh_token"])
-            
-            # Create session record
+
             session = UserSession(
                 user_id=user.id,
                 token_hash=access_token_hash,
@@ -238,10 +203,9 @@ class AuthService:
                 device_fingerprint=device_fingerprint,
                 is_active=True
             )
-            
+
             db.add(session)
-            
-            # Create audit log
+
             audit_log = AuditLog.create_log(
                 action="session_created",
                 resource_type="user_session",
@@ -253,10 +217,9 @@ class AuthService:
                 compliance_category="SOX"
             )
             db.add(audit_log)
-            
+
             await db.commit()
-            
-            # Add expiration info to tokens
+
             tokens.update({
                 "expires_in": jwt_handler.access_token_expire_minutes * 60,
                 "user": {
@@ -271,14 +234,14 @@ class AuthService:
                     "last_login": user.last_login.isoformat() if user.last_login else None
                 }
             })
-            
+
             return tokens, None
-            
+
         except Exception as e:
             await db.rollback()
             logger.error(f"Session creation failed: {str(e)}", exc_info=True)
             return None, "Session creation failed. Please try again."
-    
+
     async def refresh_token(
         self,
         refresh_token: str,
@@ -287,54 +250,63 @@ class AuthService:
         user_agent: Optional[str] = None
     ) -> Tuple[Optional[Dict[str, str]], Optional[str]]:
         """
-        Refresh access token using refresh token
-        
-        Args:
-            refresh_token: Refresh token
-            db: Database session
-            ip_address: Client IP address
-            user_agent: Client user agent
-            
-        Returns:
-            Tuple of (new token dictionary, error message)
+        Refresh tokens with rotation — old refresh token is revoked and a new pair issued.
+        Detects replay attacks by checking if the refresh token was already used.
         """
         try:
-            # Verify refresh token
+            # Verify refresh token format and expiration
             payload = jwt_handler.verify_token(refresh_token, "refresh")
             if not payload:
                 return None, "Invalid or expired refresh token"
-            
+
             user_id = UUID(payload["sub"])
-            
+            token_hash = hashlib.sha256(refresh_token.encode()).hexdigest()
+
+            # Check if this refresh token was already revoked (replay detection)
+            if await self._is_token_revoked(token_hash):
+                # Token reuse detected — revoke entire token family for this user
+                await self._revoke_token_family(user_id, db)
+                logger.logger.warning(
+                    "Token reuse detected for user %s, revoked all sessions", user_id
+                )
+                return None, "Token reuse detected. Please re-authenticate."
+
             # Find session with this refresh token
-            refresh_token_hash = hashlib.sha256(refresh_token.encode()).hexdigest()
-            
             stmt = select(UserSession).where(
-                UserSession.refresh_token_hash == refresh_token_hash,
+                UserSession.refresh_token_hash == token_hash,
                 UserSession.is_active == True
             )
             result = await db.execute(stmt)
             session = result.scalar_one_or_none()
-            
+
             if not session or session.user_id != user_id:
                 return None, "Invalid refresh token"
-            
+
             # Get user
             user = await self.get_user_by_id(user_id, db)
             if not user or not user.is_active:
                 return None, "User not found or inactive"
-            
-            # Create new access token
-            new_access_token = jwt_handler.create_access_token(user.id)
-            new_access_token_hash = hashlib.sha256(
-                new_access_token.encode()
+
+            # Revoke the old refresh token to prevent replay
+            await self._revoke_token(token_hash)
+
+            # Issue a new token pair (rotation)
+            new_tokens = jwt_handler.create_token_pair(user.id)
+
+            new_access_hash = hashlib.sha256(
+                new_tokens["access_token"].encode()
             ).hexdigest()
-            
-            # Update session
-            session.token_hash = new_access_token_hash
-            session.expires_at = jwt_handler.get_token_expiration(new_access_token)
+            new_refresh_hash = hashlib.sha256(
+                new_tokens["refresh_token"].encode()
+            ).hexdigest()
+
+            # Update session with new token hashes
+            session.token_hash = new_access_hash
+            session.refresh_token_hash = new_refresh_hash
+            session.expires_at = jwt_handler.get_token_expiration(new_tokens["access_token"])
+            session.refresh_expires_at = jwt_handler.get_token_expiration(new_tokens["refresh_token"])
             session.last_used_at = datetime.now(timezone.utc)
-            
+
             # Create audit log
             audit_log = AuditLog.create_log(
                 action="token_refreshed",
@@ -347,21 +319,21 @@ class AuthService:
                 compliance_category="SOX"
             )
             db.add(audit_log)
-            
+
             await db.commit()
-            
+
             return {
-                "access_token": new_access_token,
-                "refresh_token": refresh_token,  # Keep same refresh token
+                "access_token": new_tokens["access_token"],
+                "refresh_token": new_tokens["refresh_token"],
                 "token_type": "bearer",
                 "expires_in": jwt_handler.access_token_expire_minutes * 60
             }, None
-            
+
         except Exception as e:
             await db.rollback()
             logger.error(f"Token refresh failed: {str(e)}", exc_info=True)
-            return None, "Token refresh failed. Please reauthenticate."
-    
+            return None, "Token refresh failed. Please re-authenticate."
+
     async def logout_user(
         self,
         access_token: str,
@@ -369,29 +341,16 @@ class AuthService:
         ip_address: Optional[str] = None,
         user_agent: Optional[str] = None
     ) -> Tuple[bool, Optional[str]]:
-        """
-        Logout user by revoking session
-        
-        Args:
-            access_token: Access token to revoke
-            db: Database session
-            ip_address: Client IP address
-            user_agent: Client user agent
-            
-        Returns:
-            Tuple of (success boolean, error message)
-        """
+        """Logout user by revoking session"""
         try:
-            # Get user ID from token
             user_id_str = jwt_handler.get_subject_from_token(access_token)
             if not user_id_str:
                 return False, "Invalid token"
-            
+
             user_id = UUID(user_id_str)
-            
-            # Find and revoke session
+
             access_token_hash = hashlib.sha256(access_token.encode()).hexdigest()
-            
+
             stmt = select(UserSession).where(
                 UserSession.token_hash == access_token_hash,
                 UserSession.user_id == user_id,
@@ -399,11 +358,10 @@ class AuthService:
             )
             result = await db.execute(stmt)
             session = result.scalar_one_or_none()
-            
+
             if session:
                 session.revoke()
-                
-                # Create audit log
+
                 audit_log = AuditLog.create_log(
                     action="logout",
                     resource_type="user_session",
@@ -415,54 +373,130 @@ class AuthService:
                     compliance_category="SOX"
                 )
                 db.add(audit_log)
-                
+
                 await db.commit()
-            
+
             return True, None
-            
+
         except Exception as e:
             await db.rollback()
             logger.error(f"Logout failed: {str(e)}", exc_info=True)
             return False, "Logout failed. Please try again."
-    
+
+    # --- Account lockout helpers (Task 2.7) ---
+
+    async def _get_failed_attempts(self, key: str) -> int:
+        """Get number of failed login attempts from Redis"""
+        try:
+            from app.core.cache import cache_manager
+            if cache_manager._connected:
+                val = await cache_manager.redis_client.get(f"auth:{key}")
+                return int(val) if val else 0
+        except Exception:
+            pass
+        return 0
+
+    async def _increment_failed_attempts(self, key: str) -> None:
+        """Increment failed login attempts in Redis"""
+        try:
+            from app.core.cache import cache_manager
+            if cache_manager._connected:
+                redis_key = f"auth:{key}"
+                pipe = cache_manager.redis_client.pipeline()
+                pipe.incr(redis_key)
+                pipe.expire(redis_key, SecurityConfig.LOCKOUT_DURATION_MINUTES * 60)
+                await pipe.execute()
+        except Exception as e:
+            logger.logger.warning("Failed to increment login attempts: %s", e)
+
+    async def _clear_failed_attempts(self, key: str) -> None:
+        """Clear failed login attempts on successful login"""
+        try:
+            from app.core.cache import cache_manager
+            if cache_manager._connected:
+                await cache_manager.redis_client.delete(f"auth:{key}")
+        except Exception:
+            pass
+
+    async def _get_lockout_remaining(self, key: str) -> int:
+        """Get remaining lockout time in minutes"""
+        try:
+            from app.core.cache import cache_manager
+            if cache_manager._connected:
+                ttl = await cache_manager.redis_client.ttl(f"auth:{key}")
+                return max(1, (ttl + 59) // 60) if ttl > 0 else 0
+        except Exception:
+            pass
+        return SecurityConfig.LOCKOUT_DURATION_MINUTES
+
+    # --- Token revocation helpers (Task 2.5) ---
+
+    async def _revoke_token(self, token_hash: str) -> None:
+        """Store revoked refresh token in Redis with TTL matching refresh token expiry"""
+        try:
+            from app.core.cache import cache_manager
+            if cache_manager._connected:
+                await cache_manager.redis_client.setex(
+                    f"revoked_token:{token_hash}",
+                    7 * 24 * 3600,  # 7 days (matches refresh token expiry)
+                    "1",
+                )
+        except Exception as e:
+            logger.logger.warning("Failed to revoke token in Redis: %s", e)
+
+    async def _is_token_revoked(self, token_hash: str) -> bool:
+        """Check if a token has been revoked (replay detection)"""
+        try:
+            from app.core.cache import cache_manager
+            if cache_manager._connected:
+                return bool(await cache_manager.redis_client.exists(f"revoked_token:{token_hash}"))
+        except Exception:
+            pass
+        return False
+
+    async def _revoke_token_family(self, user_id: UUID, db: AsyncSession) -> None:
+        """Revoke all active sessions for a user (response to token reuse)"""
+        try:
+            stmt = select(UserSession).where(
+                UserSession.user_id == user_id,
+                UserSession.is_active == True,
+            )
+            result = await db.execute(stmt)
+            for session in result.scalars().all():
+                session.revoke()
+            await db.commit()
+        except Exception as e:
+            logger.logger.error("Failed to revoke token family: %s", e)
+
+    # --- User lookup ---
+
     async def get_user_by_email(self, email: str, db: AsyncSession) -> Optional[User]:
         """Get user by email address"""
         stmt = select(User).where(User.email == email.lower().strip())
         result = await db.execute(stmt)
         return result.scalar_one_or_none()
-    
+
     async def get_user_by_id(self, user_id: UUID, db: AsyncSession) -> Optional[User]:
         """Get user by ID"""
         stmt = select(User).where(User.id == user_id)
         result = await db.execute(stmt)
         return result.scalar_one_or_none()
-    
+
     async def verify_session(
-        self, 
-        access_token: str, 
+        self,
+        access_token: str,
         db: AsyncSession
     ) -> Optional[User]:
-        """
-        Verify session and return user if valid
-        
-        Args:
-            access_token: Access token to verify
-            db: Database session
-            
-        Returns:
-            User object if session is valid, None otherwise
-        """
+        """Verify session and return user if valid"""
         try:
-            # Verify token format and expiration
             payload = jwt_handler.verify_token(access_token, "access")
             if not payload:
                 return None
-            
+
             user_id = UUID(payload["sub"])
-            
-            # Check if session exists and is active
+
             access_token_hash = hashlib.sha256(access_token.encode()).hexdigest()
-            
+
             stmt = select(UserSession).where(
                 UserSession.token_hash == access_token_hash,
                 UserSession.user_id == user_id,
@@ -470,21 +504,19 @@ class AuthService:
             )
             result = await db.execute(stmt)
             session = result.scalar_one_or_none()
-            
+
             if not session:
                 return None
-            
-            # Update last used time
+
             session.update_last_used()
-            
-            # Get and return user
+
             user = await self.get_user_by_id(user_id, db)
             if user and user.is_active:
                 await db.commit()
                 return user
-            
+
             return None
-            
+
         except Exception:
             return None
 
@@ -494,13 +526,10 @@ auth_service = AuthService()
 
 # Module-level functions for backward compatibility
 async def register_user(email: str, password: str, first_name: str, last_name: str, db, ip_address: Optional[str] = None, user_agent: Optional[str] = None):
-    """Register a new user"""
     return await auth_service.register_user(email, password, first_name, last_name, db, ip_address, user_agent)
 
 async def authenticate_user(email: str, password: str, db, ip_address: Optional[str] = None, user_agent: Optional[str] = None):
-    """Authenticate user"""
     return await auth_service.authenticate_user(email, password, db, ip_address, user_agent)
 
 async def get_user_by_id(user_id, db):
-    """Get user by ID"""
     return await auth_service.get_user_by_id(user_id, db)

@@ -4,8 +4,7 @@ Database configuration and connection management for Financial Analysis Platform
 import os
 from typing import AsyncGenerator
 
-from sqlalchemy import
-eate_engine, text
+from sqlalchemy import MetaData, create_engine, text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
@@ -100,24 +99,6 @@ async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
         finally:
             await session.close()
             db_logger.logger.debug("Database session closed")
-
-
-def get_sync_session():
-    """
-    Get sync database session for migrations
-    
-    Returns:
-        Session: Sync database session
-    """
-    session = SessionLocal()
-    try:
-        return session
-    except Exception as e:
-        db_logger.logger.error(f"Sync database session error: {str(e)}")
-        session.rollback()
-        raise
-    finally:
-        session.close()
 
 
 async def check_database_connection() -> bool:

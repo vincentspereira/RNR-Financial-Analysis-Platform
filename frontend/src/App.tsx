@@ -20,6 +20,13 @@ const WatchlistPage = React.lazy(() => import('@/pages/Watchlist').then(module =
 const AnalyticsPage = React.lazy(() => import('@/pages/Analytics').then(module => ({ default: module.AnalyticsPage })));
 const DataManagement = React.lazy(() => import('@/pages/DataManagement').then(module => ({ default: module.DataManagement })));
 
+// Phase 5 pages
+const RiskDashboard = React.lazy(() => import('@/pages/RiskDashboard').then(module => ({ default: module.RiskDashboard })));
+const NotificationsPage = React.lazy(() => import('@/pages/Notifications').then(module => ({ default: module.Notifications })));
+const PaperTradingPage = React.lazy(() => import('@/pages/PaperTrading').then(module => ({ default: module.PaperTrading })));
+const StockScreenerPage = React.lazy(() => import('@/pages/StockScreener').then(module => ({ default: module.StockScreener })));
+const AdminPage = React.lazy(() => import('@/pages/Admin').then(module => ({ default: module.Admin })));
+
 // Placeholder components for future implementation
 const SettingsPage = React.lazy(() => 
   Promise.resolve({
@@ -136,13 +143,59 @@ function App() {
                   } 
                 />
                 
-                <Route 
-                  path="settings" 
+                <Route
+                  path="settings"
                   element={
                     <Suspense fallback={<PageLoader />}>
                       <SettingsPage />
                     </Suspense>
-                  } 
+                  }
+                />
+
+                {/* Phase 5 routes */}
+                <Route
+                  path="risk"
+                  element={
+                    <Suspense fallback={<PageLoader />}>
+                      <RiskDashboard />
+                    </Suspense>
+                  }
+                />
+
+                <Route
+                  path="notifications"
+                  element={
+                    <Suspense fallback={<PageLoader />}>
+                      <NotificationsPage />
+                    </Suspense>
+                  }
+                />
+
+                <Route
+                  path="paper-trading"
+                  element={
+                    <Suspense fallback={<PageLoader />}>
+                      <PaperTradingPage />
+                    </Suspense>
+                  }
+                />
+
+                <Route
+                  path="screener"
+                  element={
+                    <Suspense fallback={<PageLoader />}>
+                      <StockScreenerPage />
+                    </Suspense>
+                  }
+                />
+
+                <Route
+                  path="admin"
+                  element={
+                    <Suspense fallback={<PageLoader />}>
+                      <AdminPage />
+                    </Suspense>
+                  }
                 />
               </Route>
               

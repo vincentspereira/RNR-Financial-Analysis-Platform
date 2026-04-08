@@ -6,6 +6,7 @@ export interface User {
   id: string;
   email: string;
   name: string;
+  role: 'user' | 'premium' | 'admin';
   is_active: boolean;
   is_verified: boolean;
   subscription_tier: 'basic' | 'premium' | 'enterprise';

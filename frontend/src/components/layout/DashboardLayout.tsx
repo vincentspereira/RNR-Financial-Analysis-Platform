@@ -17,6 +17,10 @@ import {
   Search,
   Eye,
   Brain,
+  Shield,
+  LineChart,
+  Filter,
+  Users,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -27,14 +31,22 @@ const navigation = [
   { name: 'Watchlist', href: '/watchlist', icon: Eye },
   { name: 'Advanced Analytics', href: '/analytics', icon: Brain },
   { name: 'Data Sources', href: '/data', icon: Database },
+  { name: 'Risk Dashboard', href: '/risk', icon: Shield },
+  { name: 'Paper Trading', href: '/paper-trading', icon: LineChart },
+  { name: 'Stock Screener', href: '/screener', icon: Filter },
+  { name: 'Notifications', href: '/notifications', icon: Bell },
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
+
+const adminNavigation = { name: 'Admin', href: '/admin', icon: Users };
 
 export function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+
+  const allNavItems = user?.role === 'admin' ? [...navigation, adminNavigation] : navigation;
 
   const handleLogout = async () => {
     await logout();
@@ -66,7 +78,7 @@ export function DashboardLayout() {
               <span className="ml-2 text-xl font-bold text-gray-900">FinAnalysis</span>
             </div>
             <nav className="mt-5 px-2 space-y-1">
-              {navigation.map((item) => {
+              {allNavItems.map((item) => {
                 const isActive = location.pathname === item.href;
                 return (
                   <Link
@@ -105,7 +117,7 @@ export function DashboardLayout() {
                 <span className="ml-2 text-xl font-bold text-gray-900">FinAnalysis</span>
               </div>
               <nav className="mt-5 flex-1 px-2 space-y-1">
-                {navigation.map((item) => {
+                {allNavItems.map((item) => {
                   const isActive = location.pathname === item.href;
                   return (
                     <Link
@@ -177,12 +189,12 @@ export function DashboardLayout() {
             
             <div className="ml-4 flex items-center md:ml-6">
               {/* Notifications */}
-              <button
-                type="button"
+              <Link
+                to="/notifications"
                 className="bg-white p-1 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               >
                 <Bell className="h-6 w-6" />
-              </button>
+              </Link>
 
               {/* Profile dropdown */}
               <div className="ml-3 relative">

@@ -18,6 +18,12 @@ from app.api.v1.endpoints import (
     backtesting,
     sentiment,
     billing,
+    # Phase 5 endpoints
+    risk,
+    screener,
+    notifications,
+    paper_trading,
+    admin,
 )
 
 api_router = APIRouter()
@@ -51,6 +57,13 @@ api_router.include_router(backtesting.router)
 api_router.include_router(sentiment.router)
 api_router.include_router(billing.router)
 
+# Phase 5: Advanced Intelligence & Platform Maturity
+api_router.include_router(risk.router)
+api_router.include_router(screener.router)
+api_router.include_router(notifications.router)
+api_router.include_router(paper_trading.router)
+api_router.include_router(admin.router)
+
 # Health check endpoint
 @api_router.get("/health")
 async def health_check():
@@ -73,6 +86,10 @@ async def health_check():
             "Backtesting Framework (6 strategy types)",
             "Sentiment Analysis (NewsAPI, Finnhub)",
             "Billing & Subscriptions (Stripe)",
-            "Comprehensive Audit Logging"
+            "Risk Management (VaR, Stress Testing, Risk Scoring)",
+            "Stock Screener (50+ stocks, 6 preset screeners)",
+            "Notifications & Alerts (Price, Portfolio, Volume)",
+            "Paper Trading Simulator (Virtual portfolios)",
+            "Admin Dashboard (User management, Analytics)",
         ]
     }

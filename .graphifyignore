@@ -3,7 +3,6 @@
 # =============================================================================
 
 # Graphify output (avoid re-processing previous runs)
-graphify-out/
 .graphify_*
 
 # Python bytecode and caches

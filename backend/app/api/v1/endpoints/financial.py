@@ -24,7 +24,7 @@ from app.schemas.financial import (
     ValuationRequest,
     ValuationResponse,
 )
-from app.services.calculator.financial_calculator import financial_calculator
+from app.services.calculator.financial_calculator import FinancialCalculator, get_financial_calculator
 
 router = APIRouter(prefix="/financial", tags=["Financial Analysis"])
 logger = get_logger("api.financial")
@@ -46,6 +46,7 @@ async def calculate_financial_ratios(
     request: FinancialRatiosRequest,
     db: Annotated[AsyncSession, Depends(get_async_session)],
     current_user: User = Depends(get_current_user),
+    calculator: FinancialCalculator = Depends(get_financial_calculator),
 ):
     """
     Calculate comprehensive financial ratios for a company
@@ -77,7 +78,7 @@ async def calculate_financial_ratios(
                 detail="Fiscal quarter must be between 1 and 4"
             )
 
-        ratios_data = await financial_calculator.calculate_financial_ratios(
+        ratios_data = await calculator.calculate_financial_ratios(
             company_id=request.company_id,
             period_type=request.period_type,
             fiscal_year=request.fiscal_year,
@@ -91,7 +92,7 @@ async def calculate_financial_ratios(
                 detail="Company or financial data not found for the specified period"
             )
 
-        await financial_calculator.save_calculated_ratios(ratios_data, db)
+        await calculator.save_calculated_ratios(ratios_data, db)
 
         return FinancialRatiosResponse(**ratios_data)
 
@@ -121,6 +122,7 @@ async def calculate_company_valuation(
     request: ValuationRequest,
     db: Annotated[AsyncSession, Depends(get_async_session)],
     current_user: User = Depends(get_current_user),
+    calculator: FinancialCalculator = Depends(get_financial_calculator),
 ):
     """
     Calculate comprehensive company valuation using multiple models
@@ -144,7 +146,7 @@ async def calculate_company_valuation(
     - Quality scores (Altman Z-Score)
     """
     try:
-        valuation_data = await financial_calculator.calculate_company_valuation(
+        valuation_data = await calculator.calculate_company_valuation(
             company_id=request.company_id,
             valuation_assumptions=request.assumptions,
             db=db
@@ -184,6 +186,7 @@ async def peer_comparison_analysis(
     request: PeerComparisonRequest,
     db: Annotated[AsyncSession, Depends(get_async_session)],
     current_user: User = Depends(get_current_user),
+    calculator: FinancialCalculator = Depends(get_financial_calculator),
 ):
     """
     Compare a company's financial ratios with peer companies
@@ -205,7 +208,7 @@ async def peer_comparison_analysis(
                 detail="At least one peer company ID is required"
             )
 
-        comparison_data = await financial_calculator.get_peer_comparison(
+        comparison_data = await calculator.get_peer_comparison(
             company_id=request.company_id,
             peer_company_ids=request.peer_company_ids,
             period_type=request.period_type,
@@ -249,6 +252,7 @@ async def get_company_financial_data(
     fiscal_quarter: Optional[int] = None,
     db: Annotated[AsyncSession, Depends(get_async_session)] = None,
     current_user: User = Depends(get_current_user),
+    calculator: FinancialCalculator = Depends(get_financial_calculator),
 ):
     """
     Get raw financial data for a company
@@ -261,7 +265,7 @@ async def get_company_financial_data(
     Returns raw financial statement data and market data
     """
     try:
-        financial_data = await financial_calculator.get_company_financial_data(
+        financial_data = await calculator.get_company_financial_data(
             company_id=company_id,
             period_type=period_type,
             fiscal_year=fiscal_year,
@@ -320,6 +324,7 @@ async def batch_calculate_ratios(
     request: BatchRatiosRequest,
     db: Annotated[AsyncSession, Depends(get_async_session)],
     current_user: User = Depends(get_current_user),
+    calculator: FinancialCalculator = Depends(get_financial_calculator),
 ):
     """
     Calculate financial ratios for multiple companies in batch
@@ -349,7 +354,7 @@ async def batch_calculate_ratios(
 
         for company_id in request.company_ids:
             try:
-                ratios_data = await financial_calculator.calculate_financial_ratios(
+                ratios_data = await calculator.calculate_financial_ratios(
                     company_id=company_id,
                     period_type=request.period_type,
                     fiscal_year=request.fiscal_year,
@@ -358,7 +363,7 @@ async def batch_calculate_ratios(
                 )
 
                 if ratios_data:
-                    await financial_calculator.save_calculated_ratios(ratios_data, db)
+                    await calculator.save_calculated_ratios(ratios_data, db)
                     successful_calculations.append(FinancialRatiosResponse(**ratios_data))
                 else:
                     failed_calculations.append({

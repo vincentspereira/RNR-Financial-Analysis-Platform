@@ -1,6 +1,7 @@
 """
 Main financial calculator service that orchestrates all financial calculations
 """
+from functools import lru_cache
 from datetime import datetime
 from typing import Dict, List, Optional, Any
 from uuid import UUID
@@ -12,19 +13,25 @@ from app.models.company import Company, FinancialStatement, FinancialRatio, Mark
 from app.core.logging import get_logger
 
 logger = get_logger("app.services.calculator.financial_calculator")
-from app.services.calculator.ratio_calculator import ratio_calculator
-from app.services.calculator.valuation_calculator import valuation_calculator
 
 
 class FinancialCalculator:
-    """
-    Main financial calculator service
-    """
-    
-    def __init__(self):
-        """Initialize financial calculator"""
-        self.ratio_calc = ratio_calculator
-        self.valuation_calc = valuation_calculator
+    """Main financial calculator service — receives sub-calculators via DI."""
+
+    def __init__(
+        self,
+        ratio_calc=None,
+        valuation_calc=None,
+    ):
+        if ratio_calc is None:
+            from app.services.calculator.ratio_calculator import ratio_calculator
+            ratio_calc = ratio_calculator
+        if valuation_calc is None:
+            from app.services.calculator.valuation_calculator import valuation_calculator
+            valuation_calc = valuation_calculator
+
+        self.ratio_calc = ratio_calc
+        self.valuation_calc = valuation_calc
     
     async def get_company_financial_data(
         self,
@@ -382,5 +389,7 @@ class FinancialCalculator:
         return statistics
 
 
-# Global financial calculator instance
-financial_calculator = FinancialCalculator()
+@lru_cache(maxsize=1)
+def get_financial_calculator() -> FinancialCalculator:
+    """FastAPI dependency — returns a cached FinancialCalculator instance."""
+    return FinancialCalculator()

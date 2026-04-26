@@ -14,7 +14,16 @@
       "Bash(git commit:*)",
       "Bash(sed:*)",
       "Bash(SECRET_KEY=test-secret-key python -c \"import sys; sys.path.insert\\(0, '.'\\); from app.core.config import Settings; print\\('config.py with SECRET_KEY: OK'\\)\")",
-      "Bash(ENV_FILE=/dev/null SECRET_KEY=\"\" python -c \"import sys; sys.path.insert\\(0, '.'\\); from pydantic_settings import BaseSettings; from pydantic import ConfigDict, model_validator; from typing import List, Optional, Union; from pydantic import AnyHttpUrl; import os; class Test\\(BaseSettings\\): model_config=ConfigDict\\(env_file='/dev/null', case_sensitive=True, extra='ignore'\\); SECRET_KEY: str = ''; pass; from pydantic import model_validator; print\\('Validation works'\\)\")"
+      "Bash(ENV_FILE=/dev/null SECRET_KEY=\"\" python -c \"import sys; sys.path.insert\\(0, '.'\\); from pydantic_settings import BaseSettings; from pydantic import ConfigDict, model_validator; from typing import List, Optional, Union; from pydantic import AnyHttpUrl; import os; class Test\\(BaseSettings\\): model_config=ConfigDict\\(env_file='/dev/null', case_sensitive=True, extra='ignore'\\); SECRET_KEY: str = ''; pass; from pydantic import model_validator; print\\('Validation works'\\)\")",
+      "mcp__filesystem__read_multiple_files",
+      "mcp__filesystem__read_file",
+      "mcp__filesystem__search_files",
+      "Bash(ls -la .graphifyignore)",
+      "Bash(ls -la .gitignore)",
+      "Bash(mkdir -p graphify-out)",
+      "Bash(python -c ' *)",
+      "mcp__filesystem__create_directory",
+      "Bash(rm -rf graphify-out)"
     ],
     "deny": [],
     "ask": []

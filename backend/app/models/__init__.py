@@ -18,11 +18,12 @@ from app.models.portfolio import (
     WatchlistItem,
 )
 from app.models.subscription import SubscriptionPlan, UserSubscription, UsageRecord
-from app.models.user import User, UserSession
+from app.models.user import User, UserProfile, UserSession
 
 __all__ = [
     # User models
     "User",
+    "UserProfile",
     "UserSession",
     # Company models
     "Company",

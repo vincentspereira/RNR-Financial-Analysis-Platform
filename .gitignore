@@ -707,3 +707,16 @@ node_modules
 
 # Optional REPL history
 .node_repl_history
+# Graphify Obsidian vaults (keep graph.html, GRAPH_REPORT.md, graph.json, cost.json)
+graphify-out/obsidian/
+*/graphify-out/obsidian/
+
+# Graphify temp files
+.graphify_*
+
+# Graphify output (override *.json exclusion for graph data)
+!graphify-out/graph.json
+!graphify-out/cost.json
+!*/graphify-out/graph.json
+!*/graphify-out/cost.json
+!infrastructure/monitoring/grafana/dashboards/*.json

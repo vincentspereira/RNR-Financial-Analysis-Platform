@@ -1,0 +1,124 @@
+# =============================================================================
+# GRAPHIFY IGNORE - Financial Analysis Platform
+# =============================================================================
+
+# Graphify output (avoid re-processing previous runs)
+graphify-out/
+.graphify_*
+
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Node dependencies
+node_modules/
+
+# Test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+.pytest_cache/
+cover/
+coverage/
+*.lcov
+.nyc_output
+
+# Build artifacts
+build/
+dist/
+out/
+target/
+*.egg-info/
+*.egg
+*.whl
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Environment / secrets
+.env
+.env.*
+*.key
+*.pem
+*.p12
+*.pfx
+*.crt
+secrets/
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+logs/
+
+# Archives
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+
+# Binary / compiled
+*.exe
+*.dll
+*.dylib
+*.class
+*.com
+
+# Tool configs
+.clinerules/
+.kilocode/
+.roo/
+.windsurf/
+.cursor/
+.kiro/
+.qoder/
+.augment/
+
+# Archive directory
+.archive/
+
+# Lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+poetry.lock
+Pipfile.lock
+
+# Temporary
+tmp/
+temp/
+*.tmp
+*.bak
+*.old
+*.orig
+
+# Coverage JS assets
+coverage_html_cb_*.js
+favicon_*.png
+keybd_closed_*.png

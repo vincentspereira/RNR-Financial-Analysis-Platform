@@ -59,7 +59,7 @@ class RefreshTokenRequest(BaseModel):
 class UserResponse(BaseModel):
     """User response schema"""
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: UUID
     email: str
     first_name: str
@@ -69,6 +69,7 @@ class UserResponse(BaseModel):
     subscription_tier: str
     created_at: datetime
     last_login: Optional[datetime] = None
+    preferences: Optional[dict] = None
 
 
 class LoginResponse(BaseModel):

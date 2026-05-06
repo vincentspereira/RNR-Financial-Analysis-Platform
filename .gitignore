@@ -720,3 +720,6 @@ graphify-out/obsidian/
 !*/graphify-out/graph.json
 !*/graphify-out/cost.json
 !infrastructure/monitoring/grafana/dashboards/*.json
+
+# Agent tooling
+.agent/

@@ -35,7 +35,7 @@ class FinancialModelingPrepClient:
 
     async def _make_request(self, path: str, params: Optional[Dict] = None) -> Optional[Any]:
         if not self.api_key:
-            logger.warning("FMP: No API key configured")
+            logger.error("FMP: No API key configured. Set FINANCIAL_MODELING_PREP_API_KEY in your .env file.")
             return None
 
         params = params or {}
@@ -47,7 +47,11 @@ class FinancialModelingPrepClient:
                 self.session = aiohttp.ClientSession()
             async with self.session.get(url, params=params) as response:
                 if response.status == 200:
-                    return await response.json()
+                    data = await response.json()
+                    if isinstance(data, dict) and 'Error Message' in data:
+                        logger.error("FMP API error for %s: %s", path, data['Error Message'])
+                        return None
+                    return data
                 logger.error("FMP request failed with status %s for %s", response.status, url)
                 return None
         except Exception as e:

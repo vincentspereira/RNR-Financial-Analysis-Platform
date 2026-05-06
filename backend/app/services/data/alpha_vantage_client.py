@@ -47,37 +47,51 @@ class AlphaVantageClient:
     async def _make_request(self, params: Dict[str, str]) -> Optional[Dict[str, Any]]:
         """
         Make API request to Alpha Vantage
-        
+
         Args:
             params: Request parameters
-            
+
         Returns:
             API response data or None if failed
         """
+        if not self.api_key or self.api_key == 'demo':
+            logger.error("Alpha Vantage: No API key configured (using 'demo' key). "
+                         "Set ALPHA_VANTAGE_API_KEY in your .env file.")
+            return None
+
         params['apikey'] = self.api_key
-        
+
         try:
             if not self.session:
                 self.session = aiohttp.ClientSession()
-            
+
             async with self.session.get(self.base_url, params=params) as response:
                 if response.status == 200:
                     data = await response.json()
-                    
-                    # Check for API errors
+
                     if 'Error Message' in data:
-                        logger.warning("Alpha Vantage API error: %s", data['Error Message'])
+                        logger.error(
+                            "Alpha Vantage API error for function=%s symbol=%s: %s",
+                            params.get('function'), params.get('symbol'), data['Error Message']
+                        )
                         return None
-                    
+
+                    if 'Information' in data:
+                        logger.error(
+                            "Alpha Vantage API info for function=%s: %s",
+                            params.get('function'), data['Information']
+                        )
+                        return None
+
                     if 'Note' in data:
-                        logger.warning("Alpha Vantage API note: %s", data['Note'])
+                        logger.warning("Alpha Vantage rate limit: %s", data['Note'])
                         return None
-                    
+
                     return data
                 else:
                     logger.error("Alpha Vantage API request failed with status: %s", response.status)
                     return None
-                    
+
         except Exception as e:
             logger.error("Alpha Vantage API request error: %s", e, exc_info=True)
             return None

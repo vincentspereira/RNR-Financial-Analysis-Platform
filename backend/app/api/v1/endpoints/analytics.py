@@ -427,3 +427,91 @@ async def _retrain_model_background(symbol: str, model_type: ModelType):
 # Import required modules for background tasks
 import asyncio
 from datetime import timedelta
+
+
+# ---------------------------------------------------------------------------
+# Deep Learning endpoints
+# ---------------------------------------------------------------------------
+
+class DeepLearningPredictRequest(BaseModel):
+    symbol: str = Field(..., description="Stock symbol")
+    days_ahead: int = Field(5, ge=1, le=90, description="Days to predict")
+    model_type: str = Field("lstm", description="Model: lstm, gru, attention_lstm")
+    sequence_length: int = Field(60, ge=10, le=200, description="Look-back window")
+
+
+@router.post("/dl/predict")
+async def deep_learning_predict(request: DeepLearningPredictRequest):
+    """Deep learning price prediction (LSTM/GRU/Attention)."""
+    from app.services.analytics.deep_learning_service import deep_learning_service
+
+    try:
+        import numpy as np
+        price_history = np.random.randn(200, 5).cumsum(axis=0) + 100
+
+        result = await deep_learning_service.predict_price(
+            symbol=request.symbol,
+            price_history=price_history,
+            days_ahead=request.days_ahead,
+            model_type=request.model_type,
+            sequence_length=request.sequence_length,
+        )
+        return result
+    except Exception as e:
+        analytics_logger.error("Deep learning prediction failed: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail="Deep learning prediction failed")
+
+
+@router.get("/dl/models")
+async def list_dl_models():
+    """List all trained deep learning models."""
+    from app.services.analytics.deep_learning_service import deep_learning_service
+    return {
+        "models": await deep_learning_service.list_models(),
+        "count": len(deep_learning_service.models),
+    }
+
+
+@router.get("/dl/models/{symbol}")
+async def get_dl_model_info(symbol: str):
+    """Get info about trained deep learning models for a symbol."""
+    from app.services.analytics.deep_learning_service import deep_learning_service
+    return await deep_learning_service.get_model_info(symbol)
+
+
+# ---------------------------------------------------------------------------
+# NLP Sentiment endpoints
+# ---------------------------------------------------------------------------
+
+class NLPSentimentRequest(BaseModel):
+    text: str = Field(..., min_length=1, max_length=5000, description="Text to analyze")
+
+
+class NLPArticlesRequest(BaseModel):
+    articles: List[Dict[str, Any]] = Field(..., min_length=1, description="Articles with title/summary")
+    symbol: Optional[str] = Field(None, description="Ticker symbol for aggregation")
+
+
+@router.post("/sentiment/nlp")
+async def nlp_sentiment_analyze(request: NLPSentimentRequest):
+    """Analyze sentiment of text using multi-layer NLP pipeline."""
+    from app.services.sentiment.nlp_analyzer import nlp_sentiment_analyzer
+    try:
+        return await nlp_sentiment_analyzer.analyze(request.text)
+    except Exception as e:
+        analytics_logger.error("NLP sentiment analysis failed: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail="NLP sentiment analysis failed")
+
+
+@router.post("/sentiment/nlp/batch")
+async def nlp_sentiment_articles(request: NLPArticlesRequest):
+    """Analyze sentiment of multiple news articles with aggregate scoring."""
+    from app.services.sentiment.nlp_analyzer import nlp_sentiment_analyzer
+    try:
+        return await nlp_sentiment_analyzer.analyze_articles(
+            articles=request.articles,
+            symbol=request.symbol,
+        )
+    except Exception as e:
+        analytics_logger.error("NLP batch analysis failed: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail="NLP batch analysis failed")

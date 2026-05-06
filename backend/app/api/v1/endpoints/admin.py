@@ -2,11 +2,13 @@
 Admin Dashboard API endpoints.
 
 Provides endpoints for user management, system metrics, revenue analytics,
-and activity logging. All endpoints require admin role.
+activity logging, and SOC 2 compliance reporting. All endpoints require admin role.
 """
+from datetime import datetime
 from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status, Header
+from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_async_session
@@ -106,3 +108,68 @@ async def get_activity_log(
 ):
     """Get activity log with pagination."""
     return admin_service.get_activity_log(page, page_size, user_id, action)
+
+
+# ---------------------------------------------------------------------------
+# SOC 2 Compliance endpoints
+# ---------------------------------------------------------------------------
+
+class ComplianceReportRequest(BaseModel):
+    start_date: Optional[datetime] = Field(None, description="Report start date")
+    end_date: Optional[datetime] = Field(None, description="Report end date")
+    tsc_category: Optional[str] = Field(None, description="Filter by TSC category")
+
+
+@router.get("/compliance/report")
+async def get_soc2_compliance_report(
+    start_date: Optional[datetime] = None,
+    end_date: Optional[datetime] = None,
+    tsc_category: Optional[str] = None,
+    admin=Depends(require_admin),
+    db: AsyncSession = Depends(get_async_session),
+):
+    """Generate SOC 2 compliance report for a period."""
+    from app.core.compliance import soc2_service
+    return await soc2_service.get_compliance_report(
+        session=db,
+        start_date=start_date,
+        end_date=end_date,
+        tsc_category=tsc_category,
+    )
+
+
+@router.get("/compliance/integrity-check")
+async def verify_audit_integrity(
+    limit: int = Query(100, ge=10, le=1000),
+    admin=Depends(require_admin),
+    db: AsyncSession = Depends(get_async_session),
+):
+    """Verify integrity hashes of audit log entries."""
+    from app.core.compliance import soc2_service
+    return await soc2_service.verify_audit_integrity(session=db, limit=limit)
+
+
+@router.post("/compliance/event")
+async def log_compliance_event(
+    action: str = Query(..., description="Action name"),
+    resource_type: str = Query(..., description="Resource type"),
+    resource_id: Optional[str] = None,
+    success: bool = True,
+    error_message: Optional[str] = None,
+    admin=Depends(require_admin),
+    db: AsyncSession = Depends(get_async_session),
+):
+    """Manually log a SOC 2 compliance event."""
+    from app.core.compliance import soc2_service
+    from uuid import UUID as UUIDType
+    log = await soc2_service.log_compliance_event(
+        session=db,
+        action=action,
+        resource_type=resource_type,
+        user_id=admin.id if hasattr(admin, 'id') else None,
+        resource_id=UUID(resource_id) if resource_id else None,
+        success=success,
+        error_message=error_message,
+        metadata={"source": "admin_api"},
+    )
+    return {"id": str(log.id), "action": action, "logged": True}

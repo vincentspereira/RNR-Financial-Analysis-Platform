@@ -26,14 +26,18 @@ async_engine = create_async_engine(
     max_overflow=settings.DATABASE_MAX_OVERFLOW,
     pool_pre_ping=True,
     pool_recycle=settings.DATABASE_POOL_RECYCLE,
-    # Additional performance optimizations
     pool_timeout=30,
+    # Prepared statement cache — avoids re-parsing queries
     connect_args={
+        "statement_cache_size": settings.DATABASE_STATEMENT_CACHE_SIZE,
         "server_settings": {
             "application_name": "financial_analysis_platform",
-            "jit": "off",  # Disable JIT for better connection performance
-        }
-    }
+            "jit": "off",
+            "tcp_keepalives_idle": "60",
+            "tcp_keepalives_interval": "10",
+            "tcp_keepalives_count": "5",
+        },
+    },
 )
 
 # Create sync engine for migrations

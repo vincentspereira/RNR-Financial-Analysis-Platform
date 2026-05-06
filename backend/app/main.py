@@ -11,13 +11,12 @@ from app.api.v1.api import api_router
 from app.core.config import settings
 from app.core.logging import logger_manager, get_logger
 from app.core.middleware import (
-    SecurityHeadersMiddleware,
-    RequestLoggingMiddleware,
     RateLimitingMiddleware,
     ErrorHandlingMiddleware,
-    AuthenticationMiddleware
 )
 from app.core.cache_middleware import CacheMiddleware
+from app.core.compression import CompressionMiddleware
+from app.core.fast_middleware import ConsolidatedMiddleware
 from app.core.exceptions import BaseAPIException
 
 # Initialize logging
@@ -45,6 +44,14 @@ async def lifespan(app: FastAPI):
         app_logger.logger.info("Database performance monitoring initialized")
     except Exception as e:
         app_logger.logger.error(f"Failed to initialize database performance monitoring: {str(e)}")
+
+    # Warm connection pool
+    try:
+        from app.core.performance import warm_connection_pool
+        await warm_connection_pool()
+        app_logger.logger.info("Connection pool warmed")
+    except Exception as e:
+        app_logger.logger.error(f"Failed to warm connection pool: {str(e)}")
     
     # Initialize Redis caching
     try:
@@ -98,24 +105,26 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Add security middleware (order matters!)
+# Add middleware (order matters — outermost first):
+# 1. Error handling (outermost — catches everything)
+# 2. Rate limiting
+# 3. Consolidated (auth + timing + security headers)
+# 4. Response compression
+# 5. API response caching
 app.add_middleware(ErrorHandlingMiddleware)
-app.add_middleware(SecurityHeadersMiddleware)
-app.add_middleware(RequestLoggingMiddleware)
 app.add_middleware(
     RateLimitingMiddleware,
     requests_per_minute=settings.RATE_LIMIT_PER_MINUTE,
-    burst_limit=settings.RATE_LIMIT_BURST
+    burst_limit=settings.RATE_LIMIT_BURST,
 )
-app.add_middleware(AuthenticationMiddleware)
-
-# Add caching middleware
+app.add_middleware(ConsolidatedMiddleware)
+app.add_middleware(CompressionMiddleware)
 app.add_middleware(
     CacheMiddleware,
-    cache_ttl=300,  # 5 minutes default
+    cache_ttl=300,
     cacheable_methods=["GET"],
     cacheable_paths=["/api/v1/companies", "/api/v1/market-data", "/api/v1/financial-statements"],
-    excluded_paths=["/api/v1/auth/", "/api/v1/users/me", "/health"]
+    excluded_paths=["/api/v1/auth/", "/api/v1/users/me", "/health"],
 )
 
 # Set up CORS middleware
@@ -237,12 +246,12 @@ async def health_check():
 async def database_health():
     """Detailed database health check"""
     from app.core.database_performance import db_health_checker, db_performance_monitor
-    
+
     try:
         health_status = await db_health_checker.check_database_health()
         query_stats = await db_performance_monitor.get_query_statistics()
         pool_stats = await db_performance_monitor.get_connection_pool_stats()
-        
+
         return {
             **health_status,
             "performance_metrics": {
@@ -250,13 +259,20 @@ async def database_health():
                 "connection_pool": pool_stats
             }
         }
-        
+
     except Exception as e:
         return {
             "status": "error",
             "message": f"Database health check failed: {str(e)}",
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
+
+
+@app.get("/health/performance")
+async def performance_stats():
+    """Performance optimization statistics"""
+    from app.core.performance import get_performance_stats
+    return await get_performance_stats()
 
 
 if __name__ == "__main__":

@@ -105,6 +105,15 @@ class Settings(BaseSettings):
     DATABASE_POOL_SIZE: int = 20
     DATABASE_MAX_OVERFLOW: int = 30
     DATABASE_POOL_RECYCLE: int = 3600
+    DATABASE_STATEMENT_CACHE_SIZE: int = 100
+
+    # Response compression
+    COMPRESS_MIN_SIZE: int = 500
+    COMPRESS_GZIP_LEVEL: int = 6
+
+    # Performance monitoring
+    PERFORMANCE_TARGET_MS: int = 50
+    SLOW_QUERY_THRESHOLD_MS: int = 100
 
     # SSL/HTTPS Configuration (for production)
     SSL_CERT_FILE: Optional[str] = os.getenv("SSL_CERT_FILE")

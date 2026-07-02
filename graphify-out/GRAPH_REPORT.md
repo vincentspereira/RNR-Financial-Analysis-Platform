@@ -1200,11 +1200,11 @@ _Questions this graph is uniquely positioned to answer:_
 - **What is the exact relationship between `Byterover MCP Integration` and `Financial Analysis Platform`?**
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
 - **Why does `Sentiment analysis services.` connect `Community 18` to `Community 0`, `Community 1`, `Community 2`, `Community 3`, `Community 4`, `Community 6`, `Community 7`, `Community 11`, `Community 20`, `Community 21`, `Community 27`?**
-  _High betweenness centrality (0.111) - this node is a cross-community bridge._
-- **Why does `AuthService` connect `Community 1` to `Community 0`, `Community 10`, `Community 18`?**
-  _High betweenness centrality (0.048) - this node is a cross-community bridge._
+  _High betweenness centrality (0.118) - this node is a cross-community bridge._
 - **Why does `TechnicalIndicatorCalculator` connect `Community 6` to `Community 18`?**
   _High betweenness centrality (0.046) - this node is a cross-community bridge._
+- **Why does `FinancialMLService` connect `Community 1` to `Community 0`, `Community 7`, `Community 8`, `Community 11`, `Community 18`?**
+  _High betweenness centrality (0.036) - this node is a cross-community bridge._
 - **Are the 211 inferred relationships involving `str` (e.g. with `pytest_collection_modifyitems()` and `lifespan()`) actually correct?**
   _`str` has 211 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 154 inferred relationships involving `FinancialCalculator` (e.g. with `test_autoscaling_integration()` and `test_batch_processing_performance()`) actually correct?**

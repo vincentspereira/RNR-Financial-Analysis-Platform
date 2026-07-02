@@ -21,6 +21,7 @@ import {
   LineChart,
   Filter,
   Users,
+  Network,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -33,6 +34,7 @@ const navigation = [
   { name: 'Data Sources', href: '/data', icon: Database },
   { name: 'Risk Dashboard', href: '/risk', icon: Shield },
   { name: 'Paper Trading', href: '/paper-trading', icon: LineChart },
+  { name: 'IBKR Trading', href: '/ibkr', icon: Network },
   { name: 'Stock Screener', href: '/screener', icon: Filter },
   { name: 'Notifications', href: '/notifications', icon: Bell },
   { name: 'Settings', href: '/settings', icon: Settings },

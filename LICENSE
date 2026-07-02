@@ -1,0 +1,60 @@
+Proprietary License - All Rights Reserved
+==========================================
+
+Copyright (c) 2026 Vincent S. Pereira. All rights reserved.
+
+This software, the Financial Analysis Platform (the "Software"), and all
+associated source code, documentation, configuration, designs, schemas,
+data models, tests, and other artifacts contained in this repository (the
+"Work") are the proprietary property of Vincent S. Pereira (the "Owner").
+
+1. NO LICENSE GRANTED TO THIRD PARTIES
+   No license, express or implied, is granted to any person other than the
+   Owner. Without the Owner's prior written permission, no person may:
+     (a) copy, reproduce, distribute, publish, sublicense, sell, or
+         otherwise commercially exploit the Work;
+     (b) create derivative works of the Work;
+     (c) modify, reverse engineer, decompile, or disassemble the Work,
+         except to the extent such activity is expressly permitted by
+         applicable law;
+     (d) remove, alter, or obscure any copyright, trademark, or
+         attribution notices.
+
+2. THIRD-PARTY COMPONENTS
+   The Work depends on, includes, or references third-party software
+   components that are licensed under their own terms. See LICENSES.md
+   in this repository for a feature-level inventory of those components,
+   their licenses, and any obligations (attribution, copyleft, terms of
+   service) that apply to their use. The Owner's rights asserted above do
+   not extend to, and do not override, any third-party rights or
+   license terms.
+
+3. INTERNAL USE BY OWNER AND OWNER'S OTHER PROJECTS
+   The Owner may freely incorporate any portion of the Work that is the
+   Owner's original creation into other projects owned or controlled by
+   the Owner (including, without limitation, the Multi-Agent System
+   ("MAS")), subject only to the third-party license terms referenced in
+   Section 2.
+
+4. NO WARRANTY
+   THE WORK IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE OWNER BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY ARISING
+   FROM, OUT OF, OR IN CONNECTION WITH THE WORK OR ITS USE.
+
+5. NO ADVICE
+   The Work performs financial calculations, analyses, simulations, and
+   may execute trades through third-party brokers. NOTHING IN THE WORK
+   CONSTITUTES INVESTMENT, LEGAL, TAX, OR ACCOUNTING ADVICE. Users are
+   solely responsible for their own investment decisions and for verifying
+   the Work's outputs against authoritative sources before acting on them.
+
+6. CONTACT
+   For licensing inquiries, please contact the Owner.
+
+---
+This file is the controlling license for the Financial Analysis Platform.
+Where this file conflicts with any other notice in the repository, this
+file prevails for the Owner's contribution. Third-party files retain
+their original licenses regardless.

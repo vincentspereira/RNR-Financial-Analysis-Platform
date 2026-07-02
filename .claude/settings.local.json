@@ -23,9 +23,26 @@
       "Bash(mkdir -p graphify-out)",
       "Bash(python -c ' *)",
       "mcp__filesystem__create_directory",
-      "Bash(rm -rf graphify-out)"
+      "Bash(rm -rf graphify-out)",
+      "Bash(git diff:*)",
+      "Bash(git status:*)",
+      "Bash(git remote:*)",
+      "Bash(ls -la .graphify_*)",
+      "Bash(ls -la _apply_labels.py _gen_html.py _finalize.py)",
+      "Bash(ls -la .graphify_incremental.json)",
+      "Bash(ls -la .graphify_python)"
     ],
     "deny": [],
     "ask": []
-  }
+  },
+  "enabledMcpjsonServers": [
+    "playwright",
+    "context7",
+    "github",
+    "chrome-devtools",
+    "sequential-thinking",
+    "knowledge-graph-memory",
+    "filesystem",
+    "brave-search"
+  ]
 }

@@ -31,6 +31,10 @@ requests==2.31.0
 requests-ratelimiter==0.4.2
 yfinance>=0.2.28
 
+# Interactive Brokers (Paper Trading via TWS / IB Gateway)
+# ib-async is a BSD-2-Clause community fork of ib_insync (which is unmaintained).
+ib-async>=1.0.1
+
 # Web Scraping and Data Parsing
 beautifulsoup4==4.12.2
 lxml==4.9.3

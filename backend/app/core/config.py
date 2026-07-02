@@ -120,6 +120,25 @@ class Settings(BaseSettings):
     SSL_KEY_FILE: Optional[str] = os.getenv("SSL_KEY_FILE")
     FORCE_HTTPS: bool = os.getenv("FORCE_HTTPS", "false").lower() == "true"
 
+    # ---------------------------------------------------------------------
+    # Interactive Brokers (IBKR) integration
+    # ---------------------------------------------------------------------
+    # When enabled, the backend connects to a locally-running TWS or IB
+    # Gateway via the ib-async library. Default 7497 = TWS Paper Trading.
+    IBKR_ENABLED: bool = os.getenv("IBKR_ENABLED", "false").lower() == "true"
+    IBKR_HOST: str = os.getenv("IBKR_HOST", "127.0.0.1")
+    IBKR_PORT: int = int(os.getenv("IBKR_PORT", "7497"))
+    IBKR_CLIENT_ID: int = int(os.getenv("IBKR_CLIENT_ID", "42"))
+    IBKR_ACCOUNT_ID: Optional[str] = os.getenv("IBKR_ACCOUNT_ID") or None
+    IBKR_READONLY: bool = os.getenv("IBKR_READONLY", "true").lower() == "true"
+    IBKR_RECONNECT_DELAY_SECONDS: int = int(os.getenv("IBKR_RECONNECT_DELAY_SECONDS", "5"))
+    IBKR_MAX_RECONNECT_ATTEMPTS: int = int(os.getenv("IBKR_MAX_RECONNECT_ATTEMPTS", "10"))
+    # Safety brakes — per-user, rolling UTC day
+    IBKR_ORDER_DAILY_LIMIT: int = int(os.getenv("IBKR_ORDER_DAILY_LIMIT", "50"))
+    IBKR_ORDER_NOTIONAL_LIMIT_USD: float = float(
+        os.getenv("IBKR_ORDER_NOTIONAL_LIMIT_USD", "100000")
+    )
+
 
 # Create global settings instance
 settings = Settings()

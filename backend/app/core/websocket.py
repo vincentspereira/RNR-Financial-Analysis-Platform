@@ -85,7 +85,7 @@ class WebSocketConnection:
     async def send_message(self, message: WebSocketMessage):
         """Send message to this connection"""
         try:
-            await self.websocket.send_text(message.json())
+            await self.websocket.send_text(message.model_dump_json())
             metrics_collector.increment_counter("websocket_messages_sent")
         except Exception as e:
             websocket_logger.error(f"Failed to send message to {self.connection_id}: {str(e)}")

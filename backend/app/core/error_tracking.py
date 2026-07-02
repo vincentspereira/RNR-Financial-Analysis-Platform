@@ -4,7 +4,7 @@ Error tracking and reporting system
 import traceback
 import sys
 import json
-from datetime import datetime, timezone, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional, Any, Union
 from enum import Enum
 from uuid import uuid4
@@ -175,15 +175,20 @@ class ErrorTracker:
         return report.id
     
     def _log_error(self, report: ErrorReport):
-        """Log error report"""
+        """Log error report.
+
+        NB: `message` is a reserved LogRecord attribute — using it in `extra`
+        triggers a KeyError in the stdlib logging module. Use `error_message`
+        instead.
+        """
         log_data = {
             "error_id": report.id,
             "error_type": report.error_type,
             "severity": report.severity.value,
             "category": report.category.value,
-            "message": report.custom_message or report.error_message,
+            "error_message": report.custom_message or report.error_message,
             "context": report.context.to_dict(),
-            "tags": report.tags
+            "tags": report.tags,
         }
         
         if report.severity == ErrorSeverity.CRITICAL:

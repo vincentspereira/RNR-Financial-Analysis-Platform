@@ -255,7 +255,7 @@ def validate_request_data(data: Dict[str, Any], validation_model: BaseModel) -> 
     except ValidationError as e:
         logger.error(f"Validation error: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=422,
             detail="Request validation failed. Please check your input and try again."
         )
     except Exception as e:

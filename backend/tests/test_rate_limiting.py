@@ -86,9 +86,12 @@ class TestRateLimiter:
     async def test_close_redis(self):
         """Should close Redis connection cleanly"""
         limiter = RateLimiter()
-        limiter._redis = MagicMock()
-        limiter._redis.close = AsyncMock()
+        mock_redis = MagicMock()
+        mock_redis.close = AsyncMock()
+        limiter._redis = mock_redis
 
         await limiter.close()
-        limiter._redis.close.assert_called_once()
+
+        # close() sets self._redis = None, so capture the mock first.
+        mock_redis.close.assert_called_once()
         assert limiter._redis is None

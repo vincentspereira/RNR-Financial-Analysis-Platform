@@ -27,6 +27,9 @@ const PaperTradingPage = React.lazy(() => import('@/pages/PaperTrading').then(mo
 const StockScreenerPage = React.lazy(() => import('@/pages/StockScreener').then(module => ({ default: module.StockScreener })));
 const AdminPage = React.lazy(() => import('@/pages/Admin').then(module => ({ default: module.Admin })));
 
+// Phase 6: IBKR
+const IBKRPage = React.lazy(() => import('@/pages/IBKR').then(module => ({ default: module.IBKR })));
+
 // Placeholder components for future implementation
 const SettingsPage = React.lazy(() => 
   Promise.resolve({
@@ -176,6 +179,15 @@ function App() {
                   element={
                     <Suspense fallback={<PageLoader />}>
                       <PaperTradingPage />
+                    </Suspense>
+                  }
+                />
+
+                <Route
+                  path="ibkr"
+                  element={
+                    <Suspense fallback={<PageLoader />}>
+                      <IBKRPage />
                     </Suspense>
                   }
                 />

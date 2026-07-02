@@ -24,6 +24,8 @@ from app.api.v1.endpoints import (
     notifications,
     paper_trading,
     admin,
+    # Phase 6 endpoints
+    ibkr,
 )
 
 api_router = APIRouter()
@@ -63,6 +65,9 @@ api_router.include_router(screener.router)
 api_router.include_router(notifications.router)
 api_router.include_router(paper_trading.router)
 api_router.include_router(admin.router)
+
+# Phase 6: Interactive Brokers integration (real paper trading via TWS)
+api_router.include_router(ibkr.router)
 
 # Health check endpoint
 @api_router.get("/health")

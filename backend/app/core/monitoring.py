@@ -2,6 +2,7 @@
 Performance monitoring and metrics collection for the Financial Analysis Platform
 """
 import time
+import inspect
 import psutil
 import asyncio
 from datetime import datetime, timedelta, timezone
@@ -318,7 +319,9 @@ def monitor_performance(
                 duration = (time.time() - start_time) * 1000
                 metrics.record_timer(f"{name}.duration", duration, tags=tags)
 
-        if asyncio.iscoroutinefunction(func):
+        # Use inspect.iscoroutinefunction (asyncio.iscoroutinefunction is
+        # deprecated in Python 3.14+).
+        if inspect.iscoroutinefunction(func):
             return async_wrapper
         else:
             return sync_wrapper

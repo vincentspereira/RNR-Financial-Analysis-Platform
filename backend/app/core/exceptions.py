@@ -141,7 +141,7 @@ class ValidationError(BaseAPIException):
         super().__init__(
             message=message,
             error_code=error_code,
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=422,
             details=details
         )
 
@@ -298,21 +298,26 @@ class ErrorHandler:
     
     @staticmethod
     def log_and_raise(exception: BaseAPIException, context: Optional[Dict[str, Any]] = None):
-        """Log exception and raise it"""
+        """Log exception and raise it.
+
+        NB: `message` is a reserved attribute on LogRecord; we use
+        `error_message` here to avoid the "Attempt to overwrite 'message'
+        in LogRecord" KeyError raised by the stdlib logging module.
+        """
         log_data = {
             "error_code": exception.error_code.value,
-            "message": exception.message,
-            "status_code": exception.status_code
+            "error_message": exception.message,
+            "status_code": exception.status_code,
         }
-        
+
         if context:
             log_data["context"] = context
-        
+
         if exception.status_code >= 500:
             logger.error("Server error occurred", extra=log_data)
         else:
             logger.warning("Client error occurred", extra=log_data)
-        
+
         raise exception
 
 

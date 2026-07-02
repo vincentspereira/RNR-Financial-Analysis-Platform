@@ -4,6 +4,8 @@
 
 # Graphify output (avoid re-processing previous runs)
 .graphify_*
+graphify-out/
+*/graphify-out/
 
 # Python bytecode and caches
 __pycache__/

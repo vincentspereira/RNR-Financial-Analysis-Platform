@@ -10,6 +10,7 @@ from app.models.financial_data import (
     ExternalApiLog,
     ScreeningResult,
 )
+from app.models.ibkr import IBKROrder
 from app.models.portfolio import (
     Portfolio,
     PortfolioHolding,
@@ -47,4 +48,6 @@ __all__ = [
     "UsageRecord",
     # Audit models
     "AuditLog",
+    # IBKR models
+    "IBKROrder",
 ]

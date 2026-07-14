@@ -1,5 +1,5 @@
 """
-Redis caching layer for the Financial Analysis Platform
+Redis caching layer for the RNR Financial Analysis Platform
 """
 import orjson
 from datetime import datetime, timedelta

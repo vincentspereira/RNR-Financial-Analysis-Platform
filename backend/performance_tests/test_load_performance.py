@@ -1,5 +1,5 @@
 """
-Performance tests for Financial Analysis Platform
+Performance tests for RNR Financial Analysis Platform
 """
 import pytest
 import asyncio

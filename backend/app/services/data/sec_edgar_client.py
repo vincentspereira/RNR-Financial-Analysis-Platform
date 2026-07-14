@@ -20,7 +20,7 @@ SEC_COMPANY_FACTS_URL = "https://data.sec.gov/api/xbrl/companyfacts/{cik}.json"
 SEC_SUBMISSIONS_URL = "https://data.sec.gov/submissions/CIK{cik}.json"
 
 # Required by SEC policy - identifies the requesting application
-USER_AGENT = "Financial Analysis Platform (contact@example.com)"
+USER_AGENT = "RNR Financial Analysis Platform (contact@example.com)"
 
 
 class SecEdgarClient:

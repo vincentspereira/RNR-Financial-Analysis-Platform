@@ -13,7 +13,7 @@ async def test_data_ingestion():
     base_url = "http://localhost:8000/api/v1"
     
     async with httpx.AsyncClient() as client:
-        print("📡 Testing Financial Analysis Platform - Data Ingestion Services")
+        print("📡 Testing RNR Financial Analysis Platform - Data Ingestion Services")
         print("=" * 75)
         
         # First, we need to authenticate to test protected endpoints

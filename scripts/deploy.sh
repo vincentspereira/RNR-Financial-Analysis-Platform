@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Financial Analysis Platform - Deployment Script
+# RNR Financial Analysis Platform - Deployment Script
 # Version: 1.0.0
 # Author: System Administrator
 # Date: October 31, 2025
@@ -10,8 +10,8 @@ set -euo pipefail  # Exit on error, undefined vars, pipe failures
 # Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-LOG_FILE="/var/log/financial-analysis-deploy.log"
-BACKUP_DIR="/opt/backups/financial-analysis"
+LOG_FILE="/var/log/rnr-financial-analysis-deploy.log"
+BACKUP_DIR="/opt/backups/rnr-financial-analysis"
 DEPLOY_ENV="${DEPLOY_ENV:-production}"
 
 # Colors for output
@@ -111,8 +111,8 @@ create_backup() {
     mkdir -p "$backup_path"
     
     # Backup application files
-    if [[ -d "/opt/financial-analysis" ]]; then
-        tar -czf "$backup_path/application.tar.gz" -C /opt financial-analysis
+    if [[ -d "/opt/rnr-financial-analysis" ]]; then
+        tar -czf "$backup_path/application.tar.gz" -C /opt rnr-financial-analysis
         log_info "Application files backed up"
     fi
     
@@ -126,8 +126,8 @@ create_backup() {
     
     # Backup configuration files
     tar -czf "$backup_path/configs.tar.gz" \
-        /etc/nginx/sites-available/financial-analysis \
-        /etc/systemd/system/financial-analysis.service \
+        /etc/nginx/sites-available/rnr-financial-analysis \
+        /etc/systemd/system/rnr-financial-analysis.service \
         2>/dev/null || true
     
     echo "$backup_path" > /tmp/last_backup_path
@@ -138,7 +138,7 @@ create_backup() {
 setup_application() {
     log_info "Setting up application directory..."
     
-    local app_dir="/opt/financial-analysis"
+    local app_dir="/opt/rnr-financial-analysis"
     
     # Create application directory
     sudo mkdir -p "$app_dir"
@@ -158,7 +158,7 @@ setup_application() {
 setup_python_environment() {
     log_info "Setting up Python environment..."
     
-    cd /opt/financial-analysis/backend
+    cd /opt/rnr-financial-analysis/backend
     
     # Create virtual environment
     if [[ ! -d "venv" ]]; then
@@ -182,7 +182,7 @@ setup_python_environment() {
 setup_nodejs_environment() {
     log_info "Setting up Node.js environment..."
     
-    cd /opt/financial-analysis/frontend
+    cd /opt/rnr-financial-analysis/frontend
     
     # Install dependencies
     npm ci --production
@@ -197,7 +197,7 @@ setup_nodejs_environment() {
 setup_database() {
     log_info "Setting up database..."
     
-    cd /opt/financial-analysis/backend
+    cd /opt/rnr-financial-analysis/backend
     source venv/bin/activate
     
     # Run database migrations
@@ -210,9 +210,9 @@ setup_database() {
 setup_systemd_service() {
     log_info "Setting up systemd service..."
     
-    cat > /tmp/financial-analysis.service << EOF
+    cat > /tmp/rnr-financial-analysis.service << EOF
 [Unit]
-Description=Financial Analysis Platform API
+Description=RNR Financial Analysis Platform API
 After=network.target postgresql.service redis.service
 Requires=postgresql.service redis.service
 
@@ -220,9 +220,9 @@ Requires=postgresql.service redis.service
 Type=exec
 User=www-data
 Group=www-data
-WorkingDirectory=/opt/financial-analysis/backend
-Environment=PATH=/opt/financial-analysis/backend/venv/bin
-ExecStart=/opt/financial-analysis/backend/venv/bin/gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8000
+WorkingDirectory=/opt/rnr-financial-analysis/backend
+Environment=PATH=/opt/rnr-financial-analysis/backend/venv/bin
+ExecStart=/opt/rnr-financial-analysis/backend/venv/bin/gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8000
 ExecReload=/bin/kill -s HUP \$MAINPID
 Restart=always
 RestartSec=10
@@ -231,9 +231,9 @@ RestartSec=10
 WantedBy=multi-user.target
 EOF
 
-    sudo mv /tmp/financial-analysis.service /etc/systemd/system/
+    sudo mv /tmp/rnr-financial-analysis.service /etc/systemd/system/
     sudo systemctl daemon-reload
-    sudo systemctl enable financial-analysis
+    sudo systemctl enable rnr-financial-analysis
     
     log_success "Systemd service setup complete"
 }
@@ -242,7 +242,7 @@ EOF
 setup_nginx() {
     log_info "Setting up Nginx configuration..."
     
-    cat > /tmp/financial-analysis-nginx << 'EOF'
+    cat > /tmp/rnr-financial-analysis-nginx << 'EOF'
 server {
     listen 80;
     server_name _;
@@ -254,8 +254,8 @@ server {
     server_name _;
 
     # SSL Configuration
-    ssl_certificate /etc/ssl/certs/financial-analysis.crt;
-    ssl_certificate_key /etc/ssl/private/financial-analysis.key;
+    ssl_certificate /etc/ssl/certs/rnr-financial-analysis.crt;
+    ssl_certificate_key /etc/ssl/private/rnr-financial-analysis.key;
     ssl_protocols TLSv1.2 TLSv1.3;
     ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384;
     ssl_prefer_server_ciphers off;
@@ -268,7 +268,7 @@ server {
 
     # Frontend
     location / {
-        root /opt/financial-analysis/frontend/dist;
+        root /opt/rnr-financial-analysis/frontend/dist;
         try_files $uri $uri/ /index.html;
         
         # Cache static assets
@@ -300,8 +300,8 @@ server {
 }
 EOF
 
-    sudo mv /tmp/financial-analysis-nginx /etc/nginx/sites-available/financial-analysis
-    sudo ln -sf /etc/nginx/sites-available/financial-analysis /etc/nginx/sites-enabled/
+    sudo mv /tmp/rnr-financial-analysis-nginx /etc/nginx/sites-available/rnr-financial-analysis
+    sudo ln -sf /etc/nginx/sites-available/rnr-financial-analysis /etc/nginx/sites-enabled/
     sudo rm -f /etc/nginx/sites-enabled/default
     
     # Test Nginx configuration
@@ -315,8 +315,8 @@ start_services() {
     log_info "Starting services..."
     
     # Start application service
-    sudo systemctl start financial-analysis
-    sudo systemctl status financial-analysis --no-pager
+    sudo systemctl start rnr-financial-analysis
+    sudo systemctl status rnr-financial-analysis --no-pager
     
     # Start Nginx
     sudo systemctl restart nginx
@@ -362,7 +362,7 @@ verify_deployment() {
     fi
     
     # Check database connectivity
-    cd /opt/financial-analysis/backend
+    cd /opt/rnr-financial-analysis/backend
     source venv/bin/activate
     if python -c "from app.core.database import engine; engine.connect()"; then
         log_success "Database connectivity verified"
@@ -383,7 +383,7 @@ rollback_deployment() {
         
         if [[ -d "$backup_path" ]]; then
             # Stop services
-            sudo systemctl stop financial-analysis || true
+            sudo systemctl stop rnr-financial-analysis || true
             
             # Restore application files
             if [[ -f "$backup_path/application.tar.gz" ]]; then
@@ -400,7 +400,7 @@ rollback_deployment() {
             fi
             
             # Start services
-            sudo systemctl start financial-analysis || true
+            sudo systemctl start rnr-financial-analysis || true
             
             log_success "Rollback completed"
         else
@@ -424,7 +424,7 @@ cleanup_old_backups() {
 
 # Main deployment function
 main() {
-    log_info "Starting Financial Analysis Platform deployment..."
+    log_info "Starting RNR Financial Analysis Platform deployment..."
     log_info "Environment: $DEPLOY_ENV"
     log_info "Project root: $PROJECT_ROOT"
     
@@ -460,7 +460,7 @@ usage() {
     cat << EOF
 Usage: $0 [OPTIONS]
 
-Deploy the Financial Analysis Platform
+Deploy the RNR Financial Analysis Platform
 
 OPTIONS:
     -e, --environment ENV    Deployment environment (default: production)

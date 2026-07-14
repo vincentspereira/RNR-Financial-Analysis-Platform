@@ -1,5 +1,5 @@
 """
-Financial Analysis Platform Backend
+RNR Financial Analysis Platform Backend
 """
 
 __version__ = "1.0.0"

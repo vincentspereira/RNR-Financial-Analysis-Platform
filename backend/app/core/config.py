@@ -1,5 +1,5 @@
 """
-Configuration settings for the Financial Analysis Platform
+Configuration settings for the RNR Financial Analysis Platform
 """
 import os
 from typing import Any, Dict, List, Optional, Union
@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     )
 
     # Basic settings
-    PROJECT_NAME: str = "Financial Analysis Platform"
+    PROJECT_NAME: str = "RNR Financial Analysis Platform"
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
     ENVIRONMENT: str = "development"

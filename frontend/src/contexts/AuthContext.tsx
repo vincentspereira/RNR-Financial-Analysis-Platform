@@ -185,7 +185,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         },
       });
 
-      toast.success(`Welcome to Financial Analysis Platform, ${response.user.name}!`);
+      toast.success(`Welcome to RNR Financial Analysis Platform, ${response.user.name}!`);
     } catch (error: any) {
       const errorMessage = error.response?.data?.detail || 'Registration failed. Please try again.';
       dispatch({ type: 'AUTH_FAILURE', payload: errorMessage });

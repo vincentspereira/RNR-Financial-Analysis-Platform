@@ -1,4 +1,4 @@
-# Financial Analysis Platform - Backend
+# RNR Financial Analysis Platform - Backend
 
 A comprehensive financial analysis platform with advanced calculation capabilities, real-time data integration, and professional-grade security.
 
@@ -47,10 +47,7 @@ cd backend
 python -m venv venv
 
 # Activate virtual environment
-# On Windows:
-.\venv\Scripts\Activate.ps1
-# On macOS/Linux:
-source venv/bin/activate
+source venv/bin/activate  # Linux/macOS/WSL
 ```
 
 ### 2. Install Dependencies
@@ -112,8 +109,7 @@ python -m alembic upgrade head
 
 ```bash
 # Ensure virtual environment is activated
-# On Windows:
-.\venv\Scripts\Activate.ps1
+source venv/bin/activate
 
 # Start the FastAPI server
 python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
@@ -128,7 +124,7 @@ The API will be available at:
 
 ```bash
 # Ensure virtual environment is activated
-.\venv\Scripts\Activate.ps1
+source venv/bin/activate
 
 # Run authentication tests
 python test_auth.py
@@ -294,5 +290,5 @@ For technical support or questions, please contact the development team.
 
 ---
 
-**✅ PRODUCTION READY - Complete Financial Analysis Platform Backend**
+**✅ PRODUCTION READY - Complete RNR Financial Analysis Platform Backend**
 **Built with ❤️ using FastAPI, SQLAlchemy, and modern Python practices**

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Testing Framework Wrapper for Financial Analysis Platform
+Testing Framework Wrapper for RNR Financial Analysis Platform
 Uses the universal testing framework from the global Claude directory
 """
 

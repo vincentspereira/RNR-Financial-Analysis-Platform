@@ -1,4 +1,4 @@
-# Financial Analysis Platform - Documentation Constitution
+# RNR Financial Analysis Platform - Documentation Constitution
 
 ## Document Information
 - **Document Type**: Governance Framework
@@ -13,7 +13,7 @@
 ## 1. Purpose and Scope
 
 ### 1.1 Mission Statement
-This Documentation Constitution establishes the governance framework, standards, and principles for all documentation related to the Financial Analysis Platform. It ensures consistency, compliance, and quality across all documentation deliverables while meeting fintech industry regulatory requirements.
+This Documentation Constitution establishes the governance framework, standards, and principles for all documentation related to the RNR Financial Analysis Platform. It ensures consistency, compliance, and quality across all documentation deliverables while meeting fintech industry regulatory requirements.
 
 ### 1.2 Scope of Governance
 This constitution applies to all documentation including:
@@ -24,7 +24,7 @@ This constitution applies to all documentation including:
 - Developer documentation (setup, contribution, testing)
 
 ### 1.3 Regulatory Context
-The Financial Analysis Platform operates in a regulated environment requiring compliance with:
+The RNR Financial Analysis Platform operates in a regulated environment requiring compliance with:
 - **SOX (Sarbanes-Oxley Act)**: Financial reporting and audit trail requirements
 - **PCI-DSS**: Payment card industry data security standards
 - **GDPR**: General Data Protection Regulation for data privacy

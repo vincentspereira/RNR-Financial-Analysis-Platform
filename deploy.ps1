@@ -1,4 +1,4 @@
-# Financial Analysis Platform - Windows Deployment Script
+# RNR Financial Analysis Platform - Windows Deployment Script
 # Version: 1.0.0
 # Author: System Administrator
 
@@ -74,7 +74,7 @@ function Check-Prerequisites {
 }
 
 function Deploy-Application {
-    Write-Header "Deploying Financial Analysis Platform"
+    Write-Header "Deploying RNR Financial Analysis Platform"
     
     $composeFile = if ($Development) { "docker-compose.dev.yml" } else { "docker-compose.prod.yml" }
     $environment = if ($Development) { "Development" } else { "Production" }
@@ -120,7 +120,7 @@ function Show-Status {
 }
 
 function Stop-Application {
-    Write-Header "Stopping Financial Analysis Platform"
+    Write-Header "Stopping RNR Financial Analysis Platform"
     
     $composeFile = if ($Development) { "docker-compose.dev.yml" } else { "docker-compose.prod.yml" }
     docker compose -f $composeFile down

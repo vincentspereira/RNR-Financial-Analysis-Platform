@@ -62,9 +62,8 @@ tsc). `npm run build` will currently fail because of these errors.
 ### Broken Python venv
 
 ```
-venv/Scripts/python.exe : points to C:\Program Files\Python313\python.exe
-                          which no longer exists on this system
-                          (user has Python 3.14 at C:\Python314).
+venv/bin/python : created under Windows; its absolute shebang/activator
+                          paths do not resolve in WSL2/Ubuntu.
 ```
 
 `pytest`, `alembic`, `uvicorn` are all unrunnable via the existing venv.
@@ -81,9 +80,9 @@ restore individual packages but the underlying npm cache appears unreliable.
 
 **Fix:** nuke and reinstall:
 
-```powershell
+```bash
 cd frontend
-Remove-Item -Recurse -Force node_modules, package-lock.json
+rm -rf node_modules, package-lock.json
 npm cache clean --force
 npm install
 ```
@@ -114,33 +113,33 @@ npm-cache issue I can't diagnose remotely.
 
 ### Step 1 — rebuild the Python venv
 
-```powershell
-cd "C:\Users\vince\Projects\Trading\Financial Analysis Platform"
-Remove-Item -Recurse -Force venv
-C:\Python314\python.exe -m venv venv
-.\venv\Scripts\Activate.ps1
+```bash
+cd "/home/vincentspereira/Projects/Trading/RNR-Financial-Analysis-Platform"
+rm -rf venv
+python3 -m venv venv
+source venv/bin/activate
 pip install --upgrade pip
-pip install -r backend\requirements.txt
+pip install -r backend/requirements.txt
 ```
 
 Verify:
 
-```powershell
+```bash
 python -c "import ib_async, fastapi, sqlalchemy; print('OK')"
 ```
 
 ### Step 2 — rebuild frontend node_modules
 
-```powershell
+```bash
 cd frontend
-Remove-Item -Recurse -Force node_modules, package-lock.json
+rm -rf node_modules, package-lock.json
 npm cache clean --force
 npm install
 ```
 
 Verify:
 
-```powershell
+```bash
 npm run type-check       # may surface pre-existing .ts/.tsx mistakes — see below
 ```
 
@@ -151,7 +150,7 @@ Same for `src/utils/touchGestures.ts` → `src/utils/touchGestures.tsx`.
 
 ### Step 4 — start backend
 
-```powershell
+```bash
 cd backend
 alembic upgrade head    # creates the new ibkr_orders table
 uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
@@ -161,7 +160,7 @@ Visit http://localhost:8000/docs — you should see `/api/v1/ibkr/*` endpoints.
 
 ### Step 5 — start frontend
 
-```powershell
+```bash
 cd frontend
 npm run dev
 ```

@@ -1,4 +1,4 @@
-# Financial Analysis Platform - Deployment Guide
+# RNR Financial Analysis Platform - Deployment Guide
 
 **Document Version**: 1.0.0  
 **Last Updated**: October 31, 2025  
@@ -146,8 +146,8 @@ sudo systemctl enable redis
 #### Backend Environment Setup
 ```bash
 # Create application directory
-sudo mkdir -p /opt/financial-analysis
-cd /opt/financial-analysis
+sudo mkdir -p /opt/rnr-financial-analysis
+cd /opt/rnr-financial-analysis
 
 # Clone repository
 git clone <repository-url> .
@@ -178,7 +178,7 @@ npm run build
 #### 1. Backend Deployment
 ```bash
 # Navigate to backend directory
-cd /opt/financial-analysis/backend
+cd /opt/rnr-financial-analysis/backend
 
 # Activate virtual environment
 source ../venv/bin/activate
@@ -199,10 +199,10 @@ gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8000
 #### 2. Frontend Deployment
 ```bash
 # Copy built assets to web server
-sudo cp -r /opt/financial-analysis/frontend/dist/* /var/www/html/
+sudo cp -r /opt/rnr-financial-analysis/frontend/dist/* /var/www/html/
 
 # Configure Nginx
-sudo nano /etc/nginx/sites-available/financial-analysis
+sudo nano /etc/nginx/sites-available/rnr-financial-analysis
 
 # Nginx configuration:
 server {
@@ -226,7 +226,7 @@ server {
 }
 
 # Enable site and restart Nginx
-sudo ln -s /etc/nginx/sites-available/financial-analysis /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/rnr-financial-analysis /etc/nginx/sites-enabled/
 sudo systemctl restart nginx
 ```
 
@@ -235,7 +235,7 @@ sudo systemctl restart nginx
 #### 1. Docker Compose Deployment
 ```bash
 # Navigate to project root
-cd /opt/financial-analysis
+cd /opt/rnr-financial-analysis
 
 # Create production docker-compose file
 cp docker-compose.dev.yml docker-compose.prod.yml
@@ -253,8 +253,8 @@ docker-compose -f docker-compose.prod.yml up -d
 kubectl apply -f infrastructure/kubernetes/production/
 
 # Verify deployment
-kubectl get pods -n financial-analysis
-kubectl get services -n financial-analysis
+kubectl get pods -n rnr-financial-analysis
+kubectl get services -n rnr-financial-analysis
 ```
 
 ## Configuration Parameters
@@ -316,7 +316,7 @@ PROMETHEUS_ENABLED=true
 GRAFANA_ENABLED=true
 
 # File Storage
-FILE_STORAGE_PATH=/opt/financial-analysis/storage
+FILE_STORAGE_PATH=/opt/rnr-financial-analysis/storage
 MAX_FILE_SIZE_MB=10
 
 # Cache Configuration
@@ -496,7 +496,7 @@ sudo -u postgres psql -d financial_analysis_prod
 SELECT query, mean_time, calls FROM pg_stat_statements ORDER BY mean_time DESC LIMIT 10;
 
 # Monitor application logs
-tail -f /var/log/financial-analysis/app.log
+tail -f /var/log/rnr-financial-analysis/app.log
 
 # Check system load
 uptime
@@ -507,8 +507,8 @@ iostat 1 5
 
 ```bash
 # Application logs
-/var/log/financial-analysis/app.log
-/var/log/financial-analysis/error.log
+/var/log/rnr-financial-analysis/app.log
+/var/log/rnr-financial-analysis/error.log
 
 # System logs
 /var/log/syslog
@@ -532,10 +532,10 @@ iostat 1 5
 #### Traditional Deployment Rollback
 ```bash
 # Stop current application
-sudo systemctl stop financial-analysis
+sudo systemctl stop rnr-financial-analysis
 
 # Restore previous version
-cd /opt/financial-analysis
+cd /opt/rnr-financial-analysis
 git checkout previous-stable-tag
 
 # Restore virtual environment
@@ -549,7 +549,7 @@ cd backend
 alembic downgrade -1
 
 # Restart application
-sudo systemctl start financial-analysis
+sudo systemctl start rnr-financial-analysis
 ```
 
 #### Docker Rollback
@@ -567,7 +567,7 @@ docker-compose -f docker-compose.prod.yml up -d
 pg_dump -U fin_user -h localhost financial_analysis_prod > backup_before_rollback.sql
 
 # Rollback migrations
-cd /opt/financial-analysis/backend
+cd /opt/rnr-financial-analysis/backend
 alembic downgrade revision_id
 
 # If complete restore needed
@@ -647,7 +647,7 @@ find $BACKUP_DIR -name "*.gz" -mtime +30 -delete
 #### Application Backup
 ```bash
 # Backup application files
-tar -czf /opt/backups/app_$(date +%Y%m%d).tar.gz /opt/financial-analysis
+tar -czf /opt/backups/app_$(date +%Y%m%d).tar.gz /opt/rnr-financial-analysis
 
 # Backup configuration files
 tar -czf /opt/backups/config_$(date +%Y%m%d).tar.gz /etc/nginx /etc/redis /etc/postgresql
@@ -657,10 +657,10 @@ tar -czf /opt/backups/config_$(date +%Y%m%d).tar.gz /etc/nginx /etc/redis /etc/p
 
 ## Support and Contact Information
 
-**Technical Support**: support@financial-analysis-platform.com  
+**Technical Support**: support@rnr-financial-analysis-platform.com  
 **Emergency Contact**: +1-XXX-XXX-XXXX  
-**Documentation**: https://docs.financial-analysis-platform.com  
-**Status Page**: https://status.financial-analysis-platform.com  
+**Documentation**: https://docs.rnr-financial-analysis-platform.com  
+**Status Page**: https://status.rnr-financial-analysis-platform.com  
 
 ---
 

@@ -3,7 +3,7 @@ Proprietary License - All Rights Reserved
 
 Copyright (c) 2026 Vincent S. Pereira. All rights reserved.
 
-This software, the Financial Analysis Platform (the "Software"), and all
+This software, the RNR Financial Analysis Platform (the "Software"), and all
 associated source code, documentation, configuration, designs, schemas,
 data models, tests, and other artifacts contained in this repository (the
 "Work") are the proprietary property of Vincent S. Pereira (the "Owner").
@@ -54,7 +54,7 @@ data models, tests, and other artifacts contained in this repository (the
    For licensing inquiries, please contact the Owner.
 
 ---
-This file is the controlling license for the Financial Analysis Platform.
+This file is the controlling license for the RNR Financial Analysis Platform.
 Where this file conflicts with any other notice in the repository, this
 file prevails for the Owner's contribution. Third-party files retain
 their original licenses regardless.

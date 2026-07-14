@@ -1,5 +1,5 @@
 """
-Security tests for Financial Analysis Platform
+Security tests for RNR Financial Analysis Platform
 Covers OWASP Top 10 vulnerabilities and penetration testing scenarios
 """
 import pytest

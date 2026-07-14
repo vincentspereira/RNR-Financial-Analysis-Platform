@@ -119,7 +119,7 @@ export class PWAManager {
     buildTime: string;
   } {
     return {
-      name: 'Financial Analysis Platform',
+      name: 'RNR Financial Analysis Platform',
       shortName: 'FinAnalysis',
       version: (globalThis as any).__APP_VERSION__ || '1.0.0',
       buildTime: (globalThis as any).__BUILD_TIME__ || new Date().toISOString(),
@@ -148,7 +148,7 @@ export const usePWA = () => {
 
 // Offline storage manager
 export class OfflineStorageManager {
-  private dbName = 'FinancialAnalysisPlatform';
+  private dbName = 'RNRFinancialAnalysisPlatform';
   private dbVersion = 1;
   private db: IDBDatabase | null = null;
   
@@ -395,7 +395,7 @@ export const PWAInstallBanner: React.FC<PWAInstallBannerProps> = ({
         <div className="flex-1">
           <h3 className="text-sm font-medium">Install App</h3>
           <p className="text-sm opacity-90 mt-1">
-            Add Financial Analysis Platform to your home screen for quick access.
+            Add RNR Financial Analysis Platform to your home screen for quick access.
           </p>
           
           <div className="flex space-x-2 mt-3">

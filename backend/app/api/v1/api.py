@@ -76,7 +76,7 @@ async def health_check():
     return {
         "status": "healthy",
         "version": "1.0.0",
-        "service": "Financial Analysis Platform API",
+        "service": "RNR Financial Analysis Platform API",
         "features": [
             "Authentication & Authorization",
             "Financial Ratio Calculations (50+ ratios)",

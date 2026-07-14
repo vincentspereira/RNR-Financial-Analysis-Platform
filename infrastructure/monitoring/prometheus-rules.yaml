@@ -23,7 +23,7 @@ spec:
       annotations:
         summary: "Financial Platform service is down"
         description: "{{ $labels.job }} has been down for more than 1 minute"
-        runbook_url: "https://docs.financial-analysis-platform.com/runbooks/service-down"
+        runbook_url: "https://docs.rnr-financial-analysis-platform.com/runbooks/service-down"
     
     - alert: HighErrorRate
       expr: |
@@ -38,7 +38,7 @@ spec:
       annotations:
         summary: "High error rate detected"
         description: "Backend error rate is {{ $value }}% over the last 5 minutes"
-        runbook_url: "https://docs.financial-analysis-platform.com/runbooks/high-error-rate"
+        runbook_url: "https://docs.rnr-financial-analysis-platform.com/runbooks/high-error-rate"
     
     - alert: CriticalErrorRate
       expr: |
@@ -53,7 +53,7 @@ spec:
       annotations:
         summary: "Critical error rate detected"
         description: "Backend error rate is {{ $value }}% over the last 5 minutes"
-        runbook_url: "https://docs.financial-analysis-platform.com/runbooks/critical-error-rate"
+        runbook_url: "https://docs.rnr-financial-analysis-platform.com/runbooks/critical-error-rate"
     
     # Performance Alerts
     - alert: HighResponseTime
@@ -68,7 +68,7 @@ spec:
       annotations:
         summary: "High response time detected"
         description: "95th percentile response time is {{ $value }}s over the last 5 minutes"
-        runbook_url: "https://docs.financial-analysis-platform.com/runbooks/high-response-time"
+        runbook_url: "https://docs.rnr-financial-analysis-platform.com/runbooks/high-response-time"
     
     - alert: DatabaseSlowQueries
       expr: |
@@ -81,7 +81,7 @@ spec:
       annotations:
         summary: "Database queries are slow"
         description: "Average database query time is {{ $value }}s over the last 5 minutes"
-        runbook_url: "https://docs.financial-analysis-platform.com/runbooks/slow-database"
+        runbook_url: "https://docs.rnr-financial-analysis-platform.com/runbooks/slow-database"
     
     # Resource Alerts
     - alert: HighCPUUsage
@@ -96,7 +96,7 @@ spec:
       annotations:
         summary: "High CPU usage detected"
         description: "Pod {{ $labels.pod }} CPU usage is {{ $value }}%"
-        runbook_url: "https://docs.financial-analysis-platform.com/runbooks/high-cpu"
+        runbook_url: "https://docs.rnr-financial-analysis-platform.com/runbooks/high-cpu"
     
     - alert: HighMemoryUsage
       expr: |
@@ -111,7 +111,7 @@ spec:
       annotations:
         summary: "High memory usage detected"
         description: "Pod {{ $labels.pod }} memory usage is {{ $value }}%"
-        runbook_url: "https://docs.financial-analysis-platform.com/runbooks/high-memory"
+        runbook_url: "https://docs.rnr-financial-analysis-platform.com/runbooks/high-memory"
     
     - alert: PodCrashLooping
       expr: |
@@ -123,7 +123,7 @@ spec:
       annotations:
         summary: "Pod is crash looping"
         description: "Pod {{ $labels.pod }} has restarted {{ $value }} times in the last 15 minutes"
-        runbook_url: "https://docs.financial-analysis-platform.com/runbooks/crash-loop"
+        runbook_url: "https://docs.rnr-financial-analysis-platform.com/runbooks/crash-loop"
     
     # Database Alerts
     - alert: DatabaseConnectionsHigh
@@ -137,7 +137,7 @@ spec:
       annotations:
         summary: "Database connections are high"
         description: "PostgreSQL connection usage is {{ $value }}%"
-        runbook_url: "https://docs.financial-analysis-platform.com/runbooks/db-connections"
+        runbook_url: "https://docs.rnr-financial-analysis-platform.com/runbooks/db-connections"
     
     - alert: DatabaseDown
       expr: up{job="postgresql"} == 0
@@ -148,7 +148,7 @@ spec:
       annotations:
         summary: "Database is down"
         description: "PostgreSQL database has been down for more than 1 minute"
-        runbook_url: "https://docs.financial-analysis-platform.com/runbooks/db-down"
+        runbook_url: "https://docs.rnr-financial-analysis-platform.com/runbooks/db-down"
     
     # Redis Alerts
     - alert: RedisDown
@@ -160,7 +160,7 @@ spec:
       annotations:
         summary: "Redis is down"
         description: "Redis has been down for more than 1 minute"
-        runbook_url: "https://docs.financial-analysis-platform.com/runbooks/redis-down"
+        runbook_url: "https://docs.rnr-financial-analysis-platform.com/runbooks/redis-down"
     
     - alert: RedisMemoryHigh
       expr: |
@@ -173,7 +173,7 @@ spec:
       annotations:
         summary: "Redis memory usage is high"
         description: "Redis memory usage is {{ $value }}%"
-        runbook_url: "https://docs.financial-analysis-platform.com/runbooks/redis-memory"
+        runbook_url: "https://docs.rnr-financial-analysis-platform.com/runbooks/redis-memory"
     
     # Business Logic Alerts
     - alert: MLModelPredictionFailures
@@ -186,7 +186,7 @@ spec:
       annotations:
         summary: "ML model prediction failures detected"
         description: "ML prediction failure rate is {{ $value }} per second"
-        runbook_url: "https://docs.financial-analysis-platform.com/runbooks/ml-failures"
+        runbook_url: "https://docs.rnr-financial-analysis-platform.com/runbooks/ml-failures"
     
     - alert: ReportGenerationFailures
       expr: |
@@ -198,7 +198,7 @@ spec:
       annotations:
         summary: "Report generation failures detected"
         description: "Report generation failure rate is {{ $value }} per second"
-        runbook_url: "https://docs.financial-analysis-platform.com/runbooks/report-failures"
+        runbook_url: "https://docs.rnr-financial-analysis-platform.com/runbooks/report-failures"
     
     - alert: WebSocketConnectionsHigh
       expr: websocket_active_connections{job="backend-service"} > 1000
@@ -209,7 +209,7 @@ spec:
       annotations:
         summary: "High number of WebSocket connections"
         description: "Active WebSocket connections: {{ $value }}"
-        runbook_url: "https://docs.financial-analysis-platform.com/runbooks/websocket-connections"
+        runbook_url: "https://docs.rnr-financial-analysis-platform.com/runbooks/websocket-connections"
     
     # Security Alerts
     - alert: HighFailedLoginAttempts
@@ -222,7 +222,7 @@ spec:
       annotations:
         summary: "High number of failed login attempts"
         description: "Failed login rate is {{ $value }} per second"
-        runbook_url: "https://docs.financial-analysis-platform.com/runbooks/failed-logins"
+        runbook_url: "https://docs.rnr-financial-analysis-platform.com/runbooks/failed-logins"
     
     - alert: SuspiciousActivity
       expr: |
@@ -234,7 +234,7 @@ spec:
       annotations:
         summary: "Suspicious security activity detected"
         description: "Security violation rate is {{ $value }} per second"
-        runbook_url: "https://docs.financial-analysis-platform.com/runbooks/security-violations"
+        runbook_url: "https://docs.rnr-financial-analysis-platform.com/runbooks/security-violations"
     
     # Infrastructure Alerts
     - alert: DiskSpaceHigh
@@ -250,11 +250,11 @@ spec:
       annotations:
         summary: "Disk space is running low"
         description: "Available disk space is {{ $value }}%"
-        runbook_url: "https://docs.financial-analysis-platform.com/runbooks/disk-space"
+        runbook_url: "https://docs.rnr-financial-analysis-platform.com/runbooks/disk-space"
     
     - alert: LoadBalancerDown
       expr: |
-        probe_success{job="blackbox", instance=~"https://financial-analysis-platform.com.*"} == 0
+        probe_success{job="blackbox", instance=~"https://rnr-financial-analysis-platform.com.*"} == 0
       for: 1m
       labels:
         severity: critical
@@ -262,7 +262,7 @@ spec:
       annotations:
         summary: "Load balancer health check failed"
         description: "External health check for {{ $labels.instance }} is failing"
-        runbook_url: "https://docs.financial-analysis-platform.com/runbooks/lb-down"
+        runbook_url: "https://docs.rnr-financial-analysis-platform.com/runbooks/lb-down"
     
     # SLA Alerts
     - alert: SLAViolation
@@ -278,7 +278,7 @@ spec:
       annotations:
         summary: "SLA violation detected"
         description: "Service availability is {{ $value }}% (SLA: 99.5%)"
-        runbook_url: "https://docs.financial-analysis-platform.com/runbooks/sla-violation"
+        runbook_url: "https://docs.rnr-financial-analysis-platform.com/runbooks/sla-violation"
 
   - name: financial-platform.recording-rules
     interval: 30s

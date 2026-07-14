@@ -1,5 +1,5 @@
 """
-Locust load testing suite for the Financial Analysis Platform.
+Locust load testing suite for the RNR Financial Analysis Platform.
 
 Targets:
   - 10,000 concurrent users

@@ -22,15 +22,15 @@ invisible until a user complains.
 
 ### I-2. Replace the broken `venv/` with a working one — **Impact:** High **Effort:** S
 
-Current `venv` points to `C:\Program Files\Python313\python.exe` which doesn't
-exist. The user has Python 3.14 at `C:\Python314\python.exe`. Recreate:
+The committed `venv/` was created under Windows; its absolute paths and
+activators do not work in WSL2/Ubuntu. Recreate it natively:
 
-```powershell
-Remove-Item -Recurse -Force venv
-C:\Python314\python.exe -m venv venv
-.\venv\Scripts\Activate.ps1
+```bash
+rm -rf venv
+python3 -m venv venv
+source venv/bin/activate
 pip install --upgrade pip
-pip install -r backend\requirements.txt
+pip install -r backend/requirements.txt
 ```
 
 Without this, no `pytest`, `alembic`, or `uvicorn` will run.

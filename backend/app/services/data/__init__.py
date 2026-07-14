@@ -1,5 +1,5 @@
 """
-Data ingestion service package for Financial Analysis Platform
+Data ingestion service package for RNR Financial Analysis Platform
 """
 
 from app.services.data.data_ingestion_service import DataIngestionService

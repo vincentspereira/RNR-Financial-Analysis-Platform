@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document provides detailed technical specifications for the Financial Analysis Platform, including architecture, APIs, data models, and implementation standards.
+This document provides detailed technical specifications for the RNR Financial Analysis Platform, including architecture, APIs, data models, and implementation standards.
 
 ## System Architecture
 
@@ -271,7 +271,7 @@ CREATE TABLE watchlist_items (
 
 #### Base URL Structure
 ```
-Production: https://api.financial-analysis.com/v1
+Production: https://api.rnr-financial-analysis.com/v1
 Development: http://localhost:8000/v1
 ```
 
@@ -552,7 +552,7 @@ Development: http://localhost:8000/v1
 
 #### Connection Endpoint
 ```
-Production: wss://api.financial-analysis.com/ws
+Production: wss://api.rnr-financial-analysis.com/ws
 Development: ws://localhost:8000/ws
 ```
 
@@ -755,20 +755,20 @@ CMD ["nginx", "-g", "daemon off;"]
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: financial-analysis-backend
+  name: rnr-financial-analysis-backend
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: financial-analysis-backend
+      app: rnr-financial-analysis-backend
   template:
     metadata:
       labels:
-        app: financial-analysis-backend
+        app: rnr-financial-analysis-backend
     spec:
       containers:
       - name: backend
-        image: financial-analysis/backend:latest
+        image: rnr-financial-analysis/backend:latest
         ports:
         - containerPort: 8000
         env:

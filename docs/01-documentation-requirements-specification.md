@@ -1,4 +1,4 @@
-# Financial Analysis Platform - Documentation Requirements Specification
+# RNR Financial Analysis Platform - Documentation Requirements Specification
 
 ## Document Information
 - **Document Type**: Requirements Specification
@@ -13,10 +13,10 @@
 
 ## 1. Executive Summary
 
-This document specifies comprehensive documentation requirements for the Financial Analysis Platform, ensuring complete coverage of all system components, regulatory compliance needs, and stakeholder requirements. The specification addresses the platform's complexity across 10 major modules and establishes documentation standards that meet fintech industry regulatory requirements.
+This document specifies comprehensive documentation requirements for the RNR Financial Analysis Platform, ensuring complete coverage of all system components, regulatory compliance needs, and stakeholder requirements. The specification addresses the platform's complexity across 10 major modules and establishes documentation standards that meet fintech industry regulatory requirements.
 
 ### 1.1 Platform Overview
-The Financial Analysis Platform is a comprehensive fintech application featuring:
+The RNR Financial Analysis Platform is a comprehensive fintech application featuring:
 - **Fundamental Analysis Engine**: 50+ financial ratios and advanced valuation models
 - **Market Scanner**: Intelligent screening with pre-built and custom strategies
 - **Portfolio Management**: Multi-portfolio tracking with performance analytics
@@ -603,4 +603,4 @@ Documents must maintain cross-references to related content:
 
 ---
 
-*This specification serves as the master requirements document for all Financial Analysis Platform documentation and must be consulted before creating or modifying any documentation deliverable.*
+*This specification serves as the master requirements document for all RNR Financial Analysis Platform documentation and must be consulted before creating or modifying any documentation deliverable.*

@@ -29,7 +29,7 @@ services:
       - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
       - GF_USERS_ALLOW_SIGN_UP=false
-      - GF_SERVER_ROOT_URL=https://grafana.financial-analysis-platform.com
+      - GF_SERVER_ROOT_URL=https://grafana.rnr-financial-analysis-platform.com
     volumes:
       - ./grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
       - ./grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
@@ -51,7 +51,7 @@ services:
     command:
       - '--config.file=/etc/alertmanager/alertmanager.yml'
       - '--storage.path=/alertmanager'
-      - '--web.external-url=https://alerts.financial-analysis-platform.com'
+      - '--web.external-url=https://alerts.rnr-financial-analysis-platform.com'
     networks:
       - monitoring_network
     restart: unless-stopped

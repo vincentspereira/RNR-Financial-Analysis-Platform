@@ -1,0 +1,51 @@
+# Line-ending normalization — LF is canonical (Linux/WSL2 primary environment).
+# Git stores text files with LF and checks them out with LF on all platforms.
+* text=auto eol=lf
+
+# Shell scripts must always use LF (CRLF breaks bash).
+*.sh text eol=lf
+*.bash text eol=lf
+
+# Python / JS / TS / config — LF.
+*.py text eol=lf
+*.js text eol=lf
+*.jsx text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.json text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.toml text eol=lf
+*.cfg text eol=lf
+*.ini text eol=lf
+*.sql text eol=lf
+*.env text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+
+# Windows-only scripts keep CRLF (PowerShell tolerates both, but keep native).
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binary assets — never normalize.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.svg binary
+*.pdf binary
+*.zip binary
+*.tar binary
+*.gz binary
+*.tgz binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.otf binary
+*.mp4 binary
+*.webm binary
+*.webp binary
+*.bin binary

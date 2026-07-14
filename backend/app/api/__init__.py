@@ -1,3 +1,3 @@
 """
-API package for Financial Analysis Platform
+API package for RNR Financial Analysis Platform
 """

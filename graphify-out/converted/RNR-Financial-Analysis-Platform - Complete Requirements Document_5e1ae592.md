@@ -1,6 +1,6 @@
-<!-- converted from Financial Analysis Platform - Complete Requirements Document.docx -->
+<!-- converted from RNR Financial Analysis Platform - Complete Requirements Document.docx -->
 
-Financial Analysis Platform - Complete Requirements Document
+RNR Financial Analysis Platform - Complete Requirements Document
 Project Overview
 Develop a comprehensive Financial Management, Market Scanner, and Report Generation application for fundamental analysis of securities. The platform should enable users to analyze financial ratios, generate investment reports, and scan markets for investment opportunities based on fundamental analysis principles.
 Core Objectives

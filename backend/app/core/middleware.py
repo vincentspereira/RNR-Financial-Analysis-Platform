@@ -1,4 +1,4 @@
-"""Middleware for the Financial Analysis Platform"""
+"""Middleware for the RNR Financial Analysis Platform"""
 import time
 import uuid
 from typing import Callable, Optional
@@ -61,7 +61,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
                 "speaker=()"
             ),
             # Hide server information
-            "Server": "Financial-Analysis-Platform",
+            "Server": "RNR-Financial-Analysis-Platform",
             # Prevent caching of sensitive data
             "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
             "Pragma": "no-cache",

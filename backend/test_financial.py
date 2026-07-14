@@ -14,7 +14,7 @@ async def test_financial_calculations():
     base_url = "http://localhost:8000/api/v1"
     
     async with httpx.AsyncClient() as client:
-        print("🧮 Testing Financial Analysis Platform - Financial Calculations")
+        print("🧮 Testing RNR Financial Analysis Platform - Financial Calculations")
         print("=" * 70)
         
         # Test health check with new features

@@ -1,5 +1,5 @@
 """
-Financial calculation service package for Financial Analysis Platform
+Financial calculation service package for RNR Financial Analysis Platform
 """
 
 from app.services.calculator.financial_calculator import FinancialCalculator, get_financial_calculator

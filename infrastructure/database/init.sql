@@ -1,4 +1,4 @@
--- Financial Analysis Platform - Database Initialization
+-- RNR Financial Analysis Platform - Database Initialization
 -- This script runs on first container start
 
 -- Required extensions

@@ -178,7 +178,7 @@ export class CacheManager {
 
   static async clearApiCache(): Promise<void> {
     if ('caches' in window) {
-      await caches.delete('financial-analysis-api-v1');
+      await caches.delete('rnr-financial-analysis-api-v1');
       console.log('API cache cleared');
     }
   }

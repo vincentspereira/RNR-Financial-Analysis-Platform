@@ -1,4 +1,4 @@
-# Financial Analysis Platform - Complete Requirements Document
+# RNR Financial Analysis Platform - Complete Requirements Document
 
 ## Project Overview
 

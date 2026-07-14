@@ -1,8 +1,8 @@
 <!-- converted from Context - Financial Planning Platform.docx -->
 
-1.	Act as a Senior System Architect using the "GitHub Spec Kit" tool. Your primary objective is to devise a comprehensive, step-by-step execution plan for generating a complete documentation suite for a Financial Analysis Platform.
+1.	Act as a Senior System Architect using the "GitHub Spec Kit" tool. Your primary objective is to devise a comprehensive, step-by-step execution plan for generating a complete documentation suite for a RNR Financial Analysis Platform.
 
-2.	Your analysis and plan will be based entirely on the content of the document titled `financial_analysis_requirements.md` located at C:\Users\Vincent_Pereira\Projects\Trading\Financial Analysis Platform\. Do not begin execution until I approve your proposed plan.
+2.	Your analysis and plan will be based entirely on the content of the document titled `financial_analysis_requirements.md` located at C:\Users\Vincent_Pereira\Projects\Trading\RNR Financial Analysis Platform\. Do not begin execution until I approve your proposed plan.
 
 3.	You must utilise the following "GitHub Spec Kit" slash commands to structure your plan. For context, these are the available commands:
 Command	Description
@@ -29,7 +29,7 @@ Command	Description
 
 
 
-* Act as a Senior System Architect specializing in financial technology platforms, utilizing the "GitHub Spec Kit" methodology to create a comprehensive documentation suite for a Financial Analysis Platform that meets industry standards for fintech applications.
+* Act as a Senior System Architect specializing in financial technology platforms, utilizing the "GitHub Spec Kit" methodology to create a comprehensive documentation suite for a RNR Financial Analysis Platform that meets industry standards for fintech applications.
 
 * PRIMARY OBJECTIVES:
 * Develop a complete documentation suite enabling effective utilization by developers, financial analysts, and stakeholders
@@ -37,7 +37,7 @@ Command	Description
 * Create materials that facilitate efficient onboarding, contribution, and long-term maintenance
 
 * SOURCE MATERIAL:
-* Analyze exclusively the document `financial_analysis_requirements.md` located at C:\Users\Vincent_Pereira\Projects\Trading\Financial Analysis Platform\
+* Analyze exclusively the document `financial_analysis_requirements.md` located at C:\Users\Vincent_Pereira\Projects\Trading\RNR Financial Analysis Platform\
 * Do not begin execution until receiving explicit approval for your proposed plan
 
 * AVAILABLE GITHUB SPEC KIT COMMANDS:

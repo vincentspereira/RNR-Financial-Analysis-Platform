@@ -1,5 +1,5 @@
 """
-Authentication utilities and dependencies for the Financial Analysis Platform
+Authentication utilities and dependencies for the RNR Financial Analysis Platform
 """
 from typing import Optional, Dict, Any
 from fastapi import Depends, HTTPException, status, Header

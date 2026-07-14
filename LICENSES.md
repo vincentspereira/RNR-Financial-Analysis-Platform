@@ -4,7 +4,7 @@
 **Owner:** Vincent S. Pereira
 **Platform License:** Proprietary - All Rights Reserved (see `LICENSE`)
 
-This document maps each major feature of the Financial Analysis Platform to its
+This document maps each major feature of the RNR Financial Analysis Platform to its
 **direct third-party dependencies** and their licenses, so that the Multi-Agent
 System (MAS) — or any other project owned by the Owner — can decide whether to
 incorporate that feature without licensing conflict.

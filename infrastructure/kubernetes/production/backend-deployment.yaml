@@ -35,7 +35,7 @@ spec:
         fsGroup: 1000
       containers:
       - name: backend
-        image: ghcr.io/financial-analysis-platform/backend:latest
+        image: ghcr.io/rnr-financial-analysis-platform/backend:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 8000
@@ -67,7 +67,7 @@ spec:
         - name: LOG_LEVEL
           value: "INFO"
         - name: CORS_ORIGINS
-          value: "https://financial-analysis-platform.com"
+          value: "https://rnr-financial-analysis-platform.com"
         - name: SSL_CERT_FILE
           value: "/etc/ssl/certs/tls.crt"
         - name: SSL_KEY_FILE
@@ -405,10 +405,10 @@ metadata:
 spec:
   tls:
   - hosts:
-    - financial-analysis-platform.com
+    - rnr-financial-analysis-platform.com
     secretName: tls-secret
   rules:
-  - host: financial-analysis-platform.com
+  - host: rnr-financial-analysis-platform.com
     http:
       paths:
       - path: /api

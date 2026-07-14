@@ -24,7 +24,7 @@ def test_root_endpoint(client: TestClient) -> None:
     assert "message" in data
     assert "version" in data
     assert "environment" in data
-    assert "Financial Analysis Platform" in data["message"]
+    assert "RNR Financial Analysis Platform" in data["message"]
 
 
 def test_health_check_returns_payload(client: TestClient) -> None:
@@ -63,4 +63,4 @@ def test_openapi_docs(client: TestClient) -> None:
     data = response.json()
     assert "openapi" in data
     assert "info" in data
-    assert data["info"]["title"] == "Financial Analysis Platform"
+    assert data["info"]["title"] == "RNR Financial Analysis Platform"

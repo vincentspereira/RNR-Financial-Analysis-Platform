@@ -1,7 +1,7 @@
 {
-  "name": "financial-analysis-frontend",
+  "name": "rnr-financial-analysis-frontend",
   "version": "1.0.0",
-  "description": "Financial Analysis Platform Frontend",
+  "description": "RNR Financial Analysis Platform Frontend",
   "type": "module",
   "scripts": {
     "dev": "vite",

@@ -1,5 +1,5 @@
 # Comprehensive Testing Strategy
-## Financial Analysis Platform
+## RNR Financial Analysis Platform
 
 **Strategy Date**: 31 October 2025  
 **Target Coverage**: 95% Overall Code Coverage  

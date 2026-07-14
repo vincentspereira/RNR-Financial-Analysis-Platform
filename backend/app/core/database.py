@@ -1,5 +1,5 @@
 """
-Database configuration and connection management for Financial Analysis Platform
+Database configuration and connection management for RNR Financial Analysis Platform
 """
 import os
 from typing import AsyncGenerator
@@ -31,7 +31,7 @@ async_engine = create_async_engine(
     connect_args={
         "statement_cache_size": settings.DATABASE_STATEMENT_CACHE_SIZE,
         "server_settings": {
-            "application_name": "financial_analysis_platform",
+            "application_name": "rnr_financial_analysis_platform",
             "jit": "off",
             "tcp_keepalives_idle": "60",
             "tcp_keepalives_interval": "10",
@@ -50,7 +50,7 @@ sync_engine = create_engine(
     pool_recycle=settings.DATABASE_POOL_RECYCLE,
     pool_timeout=30,
     connect_args={
-        "application_name": "financial_analysis_platform_sync"
+        "application_name": "rnr_financial_analysis_platform_sync"
     }
 )
 

@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document provides a comprehensive breakdown of all 156 discrete tasks required for implementing the Financial Analysis Platform, organized by work streams, phases, and dependencies.
+This document provides a comprehensive breakdown of all 156 discrete tasks required for implementing the RNR Financial Analysis Platform, organized by work streams, phases, and dependencies.
 
 ## Work Stream Organization
 

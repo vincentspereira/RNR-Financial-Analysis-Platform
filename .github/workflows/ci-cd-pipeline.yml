@@ -345,7 +345,7 @@ jobs:
     if: github.ref == 'refs/heads/develop'
     environment:
       name: staging
-      url: https://staging.financial-analysis-platform.com
+      url: https://staging.rnr-financial-analysis-platform.com
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -401,13 +401,13 @@ jobs:
         run: |
           echo "Running smoke tests against staging..."
           # Health check
-          curl -f https://staging.financial-analysis-platform.com/api/v1/health || exit 1
+          curl -f https://staging.rnr-financial-analysis-platform.com/api/v1/health || exit 1
           
           # API endpoint tests
-          curl -f https://staging.financial-analysis-platform.com/api/v1/monitoring/metrics || exit 1
+          curl -f https://staging.rnr-financial-analysis-platform.com/api/v1/monitoring/metrics || exit 1
           
           # Frontend availability
-          curl -f https://staging.financial-analysis-platform.com/ || exit 1
+          curl -f https://staging.rnr-financial-analysis-platform.com/ || exit 1
           
           echo "All smoke tests passed!"
 
@@ -415,7 +415,7 @@ jobs:
         run: |
           echo "Running integration tests against staging..."
           cd backend
-          STAGING_API_URL=https://staging.financial-analysis-platform.com/api/v1 \
+          STAGING_API_URL=https://staging.rnr-financial-analysis-platform.com/api/v1 \
           pytest tests/integration/test_staging_deployment.py -v
 
       - name: Notify staging deployment
@@ -424,7 +424,7 @@ jobs:
         with:
           status: ${{ job.status }}
           channel: '#deployments'
-          text: 'Staging deployment ${{ job.status }}: https://staging.financial-analysis-platform.com'
+          text: 'Staging deployment ${{ job.status }}: https://staging.rnr-financial-analysis-platform.com'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
@@ -436,7 +436,7 @@ jobs:
     if: github.ref == 'refs/heads/main'
     environment:
       name: production
-      url: https://financial-analysis-platform.com
+      url: https://rnr-financial-analysis-platform.com
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -522,7 +522,7 @@ jobs:
         run: |
           echo "Monitoring deployment health for 5 minutes..."
           for i in {1..30}; do
-            if curl -f https://financial-analysis-platform.com/api/v1/health; then
+            if curl -f https://rnr-financial-analysis-platform.com/api/v1/health; then
               echo "Health check $i/30 passed"
             else
               echo "Health check $i/30 failed - initiating rollback"
@@ -549,13 +549,13 @@ jobs:
         run: |
           echo "Running production smoke tests..."
           # Comprehensive health checks
-          curl -f https://financial-analysis-platform.com/api/v1/health || exit 1
-          curl -f https://financial-analysis-platform.com/api/v1/monitoring/metrics || exit 1
-          curl -f https://financial-analysis-platform.com/ || exit 1
+          curl -f https://rnr-financial-analysis-platform.com/api/v1/health || exit 1
+          curl -f https://rnr-financial-analysis-platform.com/api/v1/monitoring/metrics || exit 1
+          curl -f https://rnr-financial-analysis-platform.com/ || exit 1
           
           # Test critical user journeys
           cd backend
-          PRODUCTION_API_URL=https://financial-analysis-platform.com/api/v1 \
+          PRODUCTION_API_URL=https://rnr-financial-analysis-platform.com/api/v1 \
           pytest tests/integration/test_critical_user_journeys.py -v
 
       - name: Update monitoring and alerting
@@ -565,7 +565,7 @@ jobs:
           curl -X POST -H "Authorization: Bearer ${{ secrets.GRAFANA_API_KEY }}" \
                -H "Content-Type: application/json" \
                -d @infrastructure/monitoring/grafana-dashboard.json \
-               https://grafana.financial-analysis-platform.com/api/dashboards/db
+               https://grafana.rnr-financial-analysis-platform.com/api/dashboards/db
           
           # Update alert rules
           kubectl apply -f infrastructure/monitoring/prometheus-rules.yaml -n monitoring
@@ -579,8 +579,8 @@ jobs:
           text: |
             Production deployment ${{ job.status }}!
             🚀 Version: ${{ github.sha }}
-            🌐 URL: https://financial-analysis-platform.com
-            📊 Monitoring: https://grafana.financial-analysis-platform.com
+            🌐 URL: https://rnr-financial-analysis-platform.com
+            📊 Monitoring: https://grafana.rnr-financial-analysis-platform.com
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
@@ -608,9 +608,9 @@ jobs:
             - Health checks passing
 
             ### Links
-            - [Production Site](https://financial-analysis-platform.com)
-            - [Monitoring Dashboard](https://grafana.financial-analysis-platform.com)
-            - [API Documentation](https://financial-analysis-platform.com/docs)
+            - [Production Site](https://rnr-financial-analysis-platform.com)
+            - [Monitoring Dashboard](https://grafana.rnr-financial-analysis-platform.com)
+            - [API Documentation](https://rnr-financial-analysis-platform.com/docs)
           draft: false
           prerelease: false
         env:

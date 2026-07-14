@@ -1,5 +1,5 @@
 """
-Structured logging configuration for the Financial Analysis Platform
+Structured logging configuration for the RNR Financial Analysis Platform
 """
 import logging
 import logging.config

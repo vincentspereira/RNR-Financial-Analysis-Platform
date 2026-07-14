@@ -1,5 +1,5 @@
 """  
-Pytest configuration and fixtures for the Financial Analysis Platform
+Pytest configuration and fixtures for the RNR Financial Analysis Platform
 """
 import pytest
 import asyncio

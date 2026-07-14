@@ -1,5 +1,5 @@
 """
-Security configuration and utilities for the Financial Analysis Platform
+Security configuration and utilities for the RNR Financial Analysis Platform
 """
 import secrets
 import string

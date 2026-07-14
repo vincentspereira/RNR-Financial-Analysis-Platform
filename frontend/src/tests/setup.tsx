@@ -1,5 +1,5 @@
 /**
- * Test setup configuration for the Financial Analysis Platform frontend
+ * Test setup configuration for the RNR Financial Analysis Platform frontend
  */
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
@@ -151,7 +151,7 @@ global.fetch = vi.fn();
 // Mock environment variables
 vi.mock('@/config/env', () => ({
   API_BASE_URL: 'http://localhost:8000',
-  APP_NAME: 'Financial Analysis Platform',
+  APP_NAME: 'RNR Financial Analysis Platform',
   APP_VERSION: '1.0.0',
 }));
 

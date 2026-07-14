@@ -121,9 +121,9 @@ When the IBKR integration ships:
 ```bash
 # Backend
 cd backend
-venv/Scripts/pip install bandit safety
-venv/Scripts/bandit -r app/ -ll
-venv/Scripts/safety check
+venv/bin/pip install bandit safety
+venv/bin/bandit -r app/ -ll
+venv/bin/safety check
 
 # Frontend
 cd frontend

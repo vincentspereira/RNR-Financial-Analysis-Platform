@@ -13,7 +13,7 @@ async def test_authentication_flow():
     base_url = "http://localhost:8000/api/v1"
     
     async with httpx.AsyncClient() as client:
-        print("🚀 Testing Financial Analysis Platform Authentication API")
+        print("🚀 Testing RNR Financial Analysis Platform Authentication API")
         print("=" * 60)
         
         # Test health check

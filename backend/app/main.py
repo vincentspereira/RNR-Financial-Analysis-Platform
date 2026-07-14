@@ -1,5 +1,5 @@
 """
-Main FastAPI application for the Financial Analysis Platform
+Main FastAPI application for the RNR Financial Analysis Platform
 """
 from datetime import datetime, timezone
 from fastapi import FastAPI, Request, HTTPException
@@ -33,7 +33,7 @@ app_logger = get_logger("app.main")
 async def lifespan(app: FastAPI):
     """Application lifespan events"""
     # Startup
-    app_logger.logger.info("Starting Financial Analysis Platform API")
+    app_logger.logger.info("Starting RNR Financial Analysis Platform API")
     app_logger.logger.info(f"Environment: {settings.ENVIRONMENT}")
     app_logger.logger.info(f"Debug mode: {settings.DEBUG}")
     
@@ -93,7 +93,7 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         app_logger.logger.error(f"Failed to disconnect Redis caching: {str(e)}")
     
-    app_logger.logger.info("Shutting down Financial Analysis Platform API")
+    app_logger.logger.info("Shutting down RNR Financial Analysis Platform API")
 
 
 # Create FastAPI application
@@ -189,7 +189,7 @@ app.include_router(api_router, prefix=settings.API_V1_STR)
 async def root():
     """Root endpoint"""
     return {
-        "message": "Welcome to Financial Analysis Platform API",
+        "message": "Welcome to RNR Financial Analysis Platform API",
         "version": settings.VERSION,
         "environment": settings.ENVIRONMENT,
         "docs_url": "/docs",

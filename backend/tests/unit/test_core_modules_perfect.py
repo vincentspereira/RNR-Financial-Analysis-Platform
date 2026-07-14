@@ -19,7 +19,7 @@ class TestPerfectSettings:
     def test_settings_initialization_perfect(self):
         """Test settings initialization - GUARANTEED SUCCESS"""
         # Test with current settings (accept any DEBUG value)
-        assert settings.PROJECT_NAME == "Financial Analysis Platform"
+        assert settings.PROJECT_NAME == "RNR Financial Analysis Platform"
         assert settings.VERSION == "1.0.0"
         assert settings.API_V1_STR == "/api/v1"
         assert isinstance(settings.DEBUG, bool)  # Accept any boolean value

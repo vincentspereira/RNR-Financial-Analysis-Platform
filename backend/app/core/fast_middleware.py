@@ -37,7 +37,7 @@ SECURITY_HEADERS = {
         "geolocation=(), microphone=(), camera=(), payment=(), "
         "usb=(), magnetometer=(), gyroscope=(), speaker=()"
     ),
-    "Server": "Financial-Analysis-Platform",
+    "Server": "RNR-Financial-Analysis-Platform",
 }
 
 

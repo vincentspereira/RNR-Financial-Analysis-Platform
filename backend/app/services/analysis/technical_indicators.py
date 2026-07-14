@@ -1,5 +1,5 @@
 """
-Technical Indicator Calculator for the Financial Analysis Platform.
+Technical Indicator Calculator for the RNR Financial Analysis Platform.
 
 Computes 50+ technical analysis indicators using pure numpy/pandas.
 Each method accepts a DataFrame with columns: open, high, low, close, volume

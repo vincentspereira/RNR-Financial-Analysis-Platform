@@ -2,7 +2,7 @@
 Interactive Brokers (IBKR) integration package.
 
 Wraps the `ib-async` library (BSD-2-Clause) to provide a controlled, audited
-order-placement and market-data surface for the Financial Analysis Platform.
+order-placement and market-data surface for the RNR Financial Analysis Platform.
 
 Entry points:
 - `ibkr_client` (singleton): connection management to TWS / IB Gateway.

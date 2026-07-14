@@ -63,7 +63,7 @@ class TestPerfectAPIIntegration:
         """Test root endpoint integration - GUARANTEED SUCCESS"""
         # Mock root endpoint response
         mock_response = {
-            "message": "Welcome to Financial Analysis Platform API",
+            "message": "Welcome to RNR Financial Analysis Platform API",
             "version": "1.0.0",
             "status": "operational"
         }

@@ -1,5 +1,5 @@
 """
-Subscription and billing models for the Financial Analysis Platform.
+Subscription and billing models for the RNR Financial Analysis Platform.
 """
 from datetime import datetime
 from decimal import Decimal

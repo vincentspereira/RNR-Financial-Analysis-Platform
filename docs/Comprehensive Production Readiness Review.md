@@ -1,4 +1,4 @@
-# Financial Analysis Platform — Comprehensive Production Readiness Review
+# RNR Financial Analysis Platform — Comprehensive Production Readiness Review
 
 **Date:** April 6, 2026
 **Scope:** Full-stack review of backend, frontend, infrastructure, and security

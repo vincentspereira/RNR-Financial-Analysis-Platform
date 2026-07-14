@@ -275,7 +275,7 @@ class TestHealthEndpoints:
     def test_root(self, client):
         response = client.get("/")
         assert response.status_code == 200
-        assert "Financial Analysis Platform" in response.json()["message"]
+        assert "RNR Financial Analysis Platform" in response.json()["message"]
 
     def test_api_v1_health(self, client):
         response = client.get("/api/v1/health")

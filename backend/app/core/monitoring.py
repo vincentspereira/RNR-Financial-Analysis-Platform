@@ -1,5 +1,5 @@
 """
-Performance monitoring and metrics collection for the Financial Analysis Platform
+Performance monitoring and metrics collection for the RNR Financial Analysis Platform
 """
 import time
 import inspect

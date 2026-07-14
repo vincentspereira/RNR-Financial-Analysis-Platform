@@ -1,5 +1,5 @@
 """
-Database models for Financial Analysis Platform
+Database models for RNR Financial Analysis Platform
 """
 
 from app.models.audit import AuditLog

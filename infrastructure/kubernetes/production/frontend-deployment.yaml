@@ -35,7 +35,7 @@ spec:
         fsGroup: 101
       containers:
       - name: frontend
-        image: ghcr.io/financial-analysis-platform/frontend:latest
+        image: ghcr.io/rnr-financial-analysis-platform/frontend:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 80
@@ -46,9 +46,9 @@ spec:
           protocol: TCP
         env:
         - name: VITE_API_URL
-          value: "https://financial-analysis-platform.com/api/v1"
+          value: "https://rnr-financial-analysis-platform.com/api/v1"
         - name: VITE_WS_URL
-          value: "wss://financial-analysis-platform.com/api/v1/ws"
+          value: "wss://rnr-financial-analysis-platform.com/api/v1/ws"
         - name: VITE_ENVIRONMENT
           value: "production"
         - name: VITE_VERSION
@@ -506,10 +506,10 @@ metadata:
 spec:
   tls:
   - hosts:
-    - financial-analysis-platform.com
+    - rnr-financial-analysis-platform.com
     secretName: tls-secret
   rules:
-  - host: financial-analysis-platform.com
+  - host: rnr-financial-analysis-platform.com
     http:
       paths:
       - path: /

@@ -1,4 +1,4 @@
-# Graph Report - C:\Users\vince\Projects\Trading\Financial Analysis Platform  (2026-07-02)
+# Graph Report - /home/vincentspereira/Projects/Trading/RNR-Financial-Analysis-Platform  (2026-07-02)
 
 ## Corpus Check
 - 239 files · ~309,646 words
@@ -394,7 +394,7 @@ Nodes (7): Development Setup Guide, Documentation Summary & Validation, Financia
 
 ### Community 40 - "Community 40"
 Cohesion: 0.33
-Nodes (3): BaseSettings, Configuration settings for the Financial Analysis Platform, Settings
+Nodes (3): BaseSettings, Configuration settings for the RNR Financial Analysis Platform, Settings
 
 ### Community 41 - "Community 41"
 Cohesion: 0.33
@@ -946,18 +946,18 @@ Nodes (1): Context - Financial Planning Platform ea0c846c
 
 ### Community 178 - "Community 178"
 Cohesion: 1.0
-Nodes (1): Financial Analysis Platform - Complete Requirements Document 5e1ae592
+Nodes (1): RNR Financial Analysis Platform - Complete Requirements Document 5e1ae592
 
 ### Community 179 - "Community 179"
 Cohesion: 1.0
-Nodes (1): Financial Analysis Platform - Comprehensive Documentation Review be5edd9b
+Nodes (1): RNR Financial Analysis Platform - Comprehensive Documentation Review be5edd9b
 
 ### Community 180 - "Community 180"
 Cohesion: 1.0
 Nodes (1): README
 
 ## Ambiguous Edges - Review These
-- `Byterover MCP Integration` → `Financial Analysis Platform`  [AMBIGUOUS]
+- `Byterover MCP Integration` → `RNR Financial Analysis Platform`  [AMBIGUOUS]
   CLAUDE.md · relation: conceptually_related_to
 
 ## Knowledge Gaps
@@ -1187,9 +1187,9 @@ Nodes (1): README
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 177`** (1 nodes): `Context - Financial Planning Platform ea0c846c`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 178`** (1 nodes): `Financial Analysis Platform - Complete Requirements Document 5e1ae592`
+- **Thin community `Community 178`** (1 nodes): `RNR Financial Analysis Platform - Complete Requirements Document 5e1ae592`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 179`** (1 nodes): `Financial Analysis Platform - Comprehensive Documentation Review be5edd9b`
+- **Thin community `Community 179`** (1 nodes): `RNR Financial Analysis Platform - Comprehensive Documentation Review be5edd9b`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 180`** (1 nodes): `README`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
@@ -1197,14 +1197,14 @@ Nodes (1): README
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **What is the exact relationship between `Byterover MCP Integration` and `Financial Analysis Platform`?**
+- **What is the exact relationship between `Byterover MCP Integration` and `RNR Financial Analysis Platform`?**
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
 - **Why does `Sentiment analysis services.` connect `Community 18` to `Community 0`, `Community 1`, `Community 2`, `Community 3`, `Community 4`, `Community 6`, `Community 7`, `Community 11`, `Community 20`, `Community 21`, `Community 27`?**
-  _High betweenness centrality (0.118) - this node is a cross-community bridge._
+  _High betweenness centrality (0.115) - this node is a cross-community bridge._
 - **Why does `TechnicalIndicatorCalculator` connect `Community 6` to `Community 18`?**
-  _High betweenness centrality (0.046) - this node is a cross-community bridge._
-- **Why does `FinancialMLService` connect `Community 1` to `Community 0`, `Community 7`, `Community 8`, `Community 11`, `Community 18`?**
-  _High betweenness centrality (0.036) - this node is a cross-community bridge._
+  _High betweenness centrality (0.055) - this node is a cross-community bridge._
+- **Why does `AuthService` connect `Community 1` to `Community 0`, `Community 10`, `Community 18`?**
+  _High betweenness centrality (0.030) - this node is a cross-community bridge._
 - **Are the 211 inferred relationships involving `str` (e.g. with `pytest_collection_modifyitems()` and `lifespan()`) actually correct?**
   _`str` has 211 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 154 inferred relationships involving `FinancialCalculator` (e.g. with `test_autoscaling_integration()` and `test_batch_processing_performance()`) actually correct?**

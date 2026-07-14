@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document outlines the comprehensive 20-week implementation timeline for the Financial Analysis Platform, including major milestones, deliverables, and dependencies.
+This document outlines the comprehensive 20-week implementation timeline for the RNR Financial Analysis Platform, including major milestones, deliverables, and dependencies.
 
 ## Timeline Summary
 

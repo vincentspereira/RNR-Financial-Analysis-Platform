@@ -1,5 +1,5 @@
 """
-Authentication service package for Financial Analysis Platform
+Authentication service package for RNR Financial Analysis Platform
 """
 
 from app.services.auth.auth_service import AuthService

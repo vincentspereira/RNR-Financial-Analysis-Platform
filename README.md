@@ -1,4 +1,4 @@
-# Financial Analysis Platform
+# RNR Financial Analysis Platform
 
 A comprehensive financial analysis platform for fundamental analysis, portfolio management, and market screening.
 
@@ -17,7 +17,7 @@ A comprehensive financial analysis platform for fundamental analysis, portfolio 
    
    ```bash
    git clone <repository-url>
-   cd "Financial Analysis Platform"
+   cd "RNR-Financial-Analysis-Platform"
    ```
 
 2. **Backend Setup**
@@ -25,14 +25,14 @@ A comprehensive financial analysis platform for fundamental analysis, portfolio 
    ```bash
    # Create and activate virtual environment
    python -m venv venv
-   ./venv/Scripts/activate  # Windows
+   source venv/bin/activate
    
    # Install dependencies
    pip install fastapi uvicorn python-dotenv pydantic-settings email-validator httpx pytest
    
    # Run the development server
    cd backend
-   ../venv/Scripts/python.exe run.py
+   ../venv/bin/python run.py
    ```
 
 3. **Frontend Setup** (coming soon)
@@ -56,7 +56,7 @@ docker-compose -f docker-compose.dev.yml up backend
 ## 📁 Project Structure
 
 ```
-Financial Analysis Platform/
+RNR-Financial-Analysis-Platform/
 ├── backend/                 # FastAPI backend application
 │   ├── app/
 │   │   ├── core/           # Core configuration and utilities
@@ -81,7 +81,7 @@ Financial Analysis Platform/
 
 ### ✅ **PROJECT COMPLETED - ALL PHASES DELIVERED**
 
-**🎉 Full-Stack Financial Analysis Platform Successfully Implemented**
+**🎉 Full-Stack RNR Financial Analysis Platform Successfully Implemented**
 
 #### **Core Features Delivered:**
 - ✅ **Authentication & Security**: JWT-based auth, OAuth2, RBAC, audit logging
@@ -143,10 +143,10 @@ Financial Analysis Platform/
 ```bash
 # Run backend tests
 cd backend
-../venv/Scripts/python.exe -m pytest tests/ -v
+../venv/bin/python -m pytest tests/ -v
 
 # Run tests with coverage
-../venv/Scripts/python.exe -m pytest tests/ --cov=app --cov-report=html
+../venv/bin/python -m pytest tests/ --cov=app --cov-report=html
 ```
 
 ## 📚 Documentation

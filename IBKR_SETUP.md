@@ -1,6 +1,6 @@
 # IBKR Paper Trading — Setup Guide
 
-This document walks you through connecting the Financial Analysis Platform's
+This document walks you through connecting the RNR Financial Analysis Platform's
 backend to your Interactive Brokers Paper Trading account via Trader Workstation
 (TWS). End state: you can place real (paper) orders from the IBKR Trading page
 in the web UI, and every order is persisted to the platform database.
@@ -19,8 +19,7 @@ in the web UI, and every order is persisted to the platform database.
    https://www.interactivebrokers.com/en/trading/tws.php
    - Pick the **Stable** build (not Latest) — the API is more reliable.
    - Windows build is fine for this guide.
-4. **Python 3.11+ in your backend venv** (you have 3.14 installed at
-   `C:\Python314\python.exe`).
+4. **Python 3.11+ in your backend venv** (you have 3.14 available as `python3`).
 
 ---
 
@@ -29,18 +28,18 @@ in the web UI, and every order is persisted to the platform database.
 The backend now lists `ib-async` in `backend/requirements.txt`. Install it into
 the backend venv:
 
-```powershell
-# Re-create the venv if it's broken (older venv points to Python 3.13 which is missing)
-Remove-Item -Recurse -Force venv
-C:\Python314\python.exe -m venv venv
-.\venv\Scripts\Activate.ps1
+```bash
+# Recreate the venv (the committed one has Windows paths that do not work in WSL)
+rm -rf venv
+python3 -m venv venv
+source venv/bin/activate
 pip install --upgrade pip
-pip install -r backend\requirements.txt
+pip install -r backend/requirements.txt
 ```
 
 Verify:
 
-```powershell
+```bash
 python -c "import ib_async; print(ib_async.__version__)"
 ```
 
@@ -118,8 +117,8 @@ IBKR_ORDER_NOTIONAL_LIMIT_USD=100000
 
 The integration adds an `ibkr_orders` table. Run alembic upgrade:
 
-```powershell
-.\venv\Scripts\Activate.ps1
+```bash
+source venv/bin/activate
 cd backend
 alembic upgrade head
 ```
@@ -130,14 +129,14 @@ You should see `b2c3d4e5f6a7_add_ibkr_orders` applied.
 
 ## Step 6: Start the backend
 
-```powershell
+```bash
 cd backend
 uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
 Open another shell for the frontend:
 
-```powershell
+```bash
 cd frontend
 npm install        # if you haven't already
 npm run dev

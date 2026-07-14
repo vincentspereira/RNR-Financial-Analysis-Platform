@@ -1,5 +1,5 @@
 """
-Standardized exception handling for the Financial Analysis Platform
+Standardized exception handling for the RNR Financial Analysis Platform
 """
 from typing import Any, Dict, Optional, Union
 from fastapi import HTTPException, status

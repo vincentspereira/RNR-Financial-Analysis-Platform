@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide provides comprehensive instructions for setting up the development environment for the Financial Analysis Platform. Following these steps will ensure all team members have consistent, productive development environments.
+This guide provides comprehensive instructions for setting up the development environment for the RNR Financial Analysis Platform. Following these steps will ensure all team members have consistent, productive development environments.
 
 ## Prerequisites
 
@@ -70,10 +70,7 @@ sudo apt install python3.11 python3.11-pip python3.11-venv
 python -m venv venv
 
 # Activate virtual environment
-# Windows:
-venv\Scripts\activate
-# macOS/Linux:
-source venv/bin/activate
+source venv/bin/activate  # Linux/macOS/WSL
 
 # Upgrade pip
 pip install --upgrade pip
@@ -227,12 +224,12 @@ code --install-extension ms-vscode.vscode-json
 ### 1. Repository Setup
 ```bash
 # Clone repository (when available)
-git clone https://github.com/your-org/financial-analysis-platform.git
-cd financial-analysis-platform
+git clone https://github.com/your-org/rnr-financial-analysis-platform.git
+cd rnr-financial-analysis-platform
 
 # Or initialize new repository
 git init
-git remote add origin https://github.com/your-org/financial-analysis-platform.git
+git remote add origin https://github.com/your-org/rnr-financial-analysis-platform.git
 ```
 
 ### 2. Backend Setup
@@ -241,9 +238,7 @@ git remote add origin https://github.com/your-org/financial-analysis-platform.gi
 cd backend
 
 # Activate virtual environment
-source ../venv/bin/activate  # Linux/macOS
-# or
-..\venv\Scripts\activate     # Windows
+source ../venv/bin/activate
 
 # Install Python dependencies
 pip install -r requirements-dev.txt
@@ -404,7 +399,7 @@ docker-compose -f docker-compose.dev.yml down
 **`.devcontainer/devcontainer.json`**:
 ```json
 {
-    "name": "Financial Analysis Platform",
+    "name": "RNR Financial Analysis Platform",
     "dockerComposeFile": "../docker-compose.dev.yml",
     "service": "backend",
     "workspaceFolder": "/app",

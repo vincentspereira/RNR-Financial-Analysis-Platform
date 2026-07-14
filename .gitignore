@@ -723,3 +723,6 @@ graphify-out/obsidian/
 
 # Agent tooling
 .agent/
+
+# ML model cache (trained models persisted by app/services/analytics/model_registry.py)
+data/models/

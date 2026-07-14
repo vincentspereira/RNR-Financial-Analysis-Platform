@@ -13,6 +13,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from app.core.logging import get_logger
 from app.core.monitoring import metrics_collector
+from app.services.analytics.model_registry import model_registry
 
 # Try to import ML libraries with fallbacks
 try:
@@ -397,7 +398,18 @@ class FinancialMLService:
         """Get existing model or train a new one"""
         if model_key in self.models:
             return self.models[model_key]
-        
+
+        # Try the on-disk registry (survives process restarts) before retraining.
+        cached = model_registry.get(model_key)
+        if cached is not None:
+            model, scaler, performance = cached
+            self.models[model_key] = model
+            self.scalers[model_key] = scaler
+            if performance is not None:
+                self.model_performance[model_key] = performance
+            ml_logger.info(f"Restored model {model_key} from registry cache")
+            return model
+
         # Train new model
         X = features.drop('target', axis=1)
         y = features['target']
@@ -441,7 +453,11 @@ class FinancialMLService:
             training_samples=len(X_train),
             last_updated=datetime.now()
         )
-        
+
+        # Persist to the on-disk registry so the next process restart reuses it
+        # instead of retraining. Best-effort; failures are logged, not raised.
+        model_registry.save(model_key, model, scaler, self.model_performance[model_key])
+
         ml_logger.info(f"Trained new model {model_key} with R² score: {r2:.3f}")
         
         return model

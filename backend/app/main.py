@@ -28,6 +28,23 @@ logger_manager.configure_logging(
 # Get application logger
 app_logger = get_logger("app.main")
 
+# Initialize Sentry error tracking early so startup errors are captured.
+# No-op when SENTRY_DSN is unset (local dev / no Sentry project configured).
+if getattr(settings, "SENTRY_DSN", None):
+    try:
+        import sentry_sdk
+        sentry_sdk.init(
+            dsn=settings.SENTRY_DSN,
+            environment=settings.SENTRY_ENVIRONMENT,
+            traces_sample_rate=settings.SENTRY_TRACES_SAMPLE_RATE,
+            send_default_pii=False,
+        )
+        app_logger.logger.info(
+            f"Sentry error tracking enabled (env={settings.SENTRY_ENVIRONMENT})"
+        )
+    except Exception as e:  # pragma: no cover - Sentry must never block startup
+        app_logger.logger.error(f"Failed to initialize Sentry: {e}")
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -60,7 +77,24 @@ async def lifespan(app: FastAPI):
         app_logger.logger.info("Redis caching initialized")
     except Exception as e:
         app_logger.logger.error(f"Failed to initialize Redis caching: {str(e)}")
-    
+
+    # Initialize WebSocket Redis pub/sub backplane (optional, for horizontal
+    # scaling). Guarded by the WEBSOCKET_REDIS_BACKPLANE_ENABLED flag; failures
+    # are swallowed so the app still starts in single-instance mode.
+    try:
+        from app.core.websocket import websocket_manager
+        websocket_manager.configure(
+            redis_url=settings.REDIS_URL,
+            enabled=settings.WEBSOCKET_REDIS_BACKPLANE_ENABLED,
+        )
+        if settings.WEBSOCKET_REDIS_BACKPLANE_ENABLED:
+            await websocket_manager.start_redis_backplane()
+            app_logger.logger.info("WebSocket Redis backplane initialized")
+        else:
+            app_logger.logger.info("WebSocket Redis backplane disabled (single-instance mode)")
+    except Exception as e:
+        app_logger.logger.error(f"Failed to initialize WebSocket Redis backplane: {str(e)}")
+
     # Initialize monitoring and error tracking
     try:
         from app.core.monitoring import performance_monitor
@@ -85,7 +119,15 @@ async def lifespan(app: FastAPI):
         app_logger.logger.info("Performance monitoring stopped")
     except Exception as e:
         app_logger.logger.error(f"Failed to stop monitoring: {str(e)}")
-    
+
+    # Stop WebSocket Redis backplane subscriber if it was started
+    try:
+        from app.core.websocket import websocket_manager
+        await websocket_manager.stop_redis_backplane()
+        app_logger.logger.info("WebSocket Redis backplane stopped")
+    except Exception as e:
+        app_logger.logger.error(f"Failed to stop WebSocket Redis backplane: {str(e)}")
+
     try:
         from app.core.cache import cache_manager
         await cache_manager.disconnect()

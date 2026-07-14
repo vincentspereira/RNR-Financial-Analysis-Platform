@@ -14,7 +14,25 @@ from pydantic import BaseModel
 from app.core.logging import get_logger
 from app.core.monitoring import metrics_collector
 
+# Optional redis.asyncio dependency. The pub/sub backplane is only activated
+# when this import succeeds AND settings.WEBSOCKET_REDIS_BACKPLANE_ENABLED is
+# truthy AND a connection can be established. Any failure leaves the manager
+# running in single-instance mode, so the module never crashes on Redis being
+# absent.
+try:  # pragma: no cover - exercised indirectly by environments with/without redis
+    import redis.asyncio as aioredis
+    from redis.asyncio import Redis as AsyncRedis
+
+    REDIS_AVAILABLE = True
+except Exception:  # ImportError or binary compatibility issues
+    aioredis = None  # type: ignore[assignment]
+    AsyncRedis = None  # type: ignore[assignment,misc]
+    REDIS_AVAILABLE = False
+
 websocket_logger = get_logger("websocket")
+
+# Redis channel used to fan out WebSocket broadcasts across backend replicas.
+_WS_BROADCAST_CHANNEL = "ws:broadcast"
 
 
 class MessageType(Enum):
@@ -116,16 +134,236 @@ class WebSocketConnection:
 
 class WebSocketManager:
     """WebSocket connection manager"""
-    
+
     def __init__(self):
         self.connections: Dict[str, WebSocketConnection] = {}
         self.user_connections: Dict[str, Set[str]] = {}  # user_id -> connection_ids
         self.subscriptions: Dict[str, Set[str]] = {}  # subscription_key -> connection_ids
         self.rooms: Dict[str, Set[str]] = {}  # room_id -> connection_ids
-        
+
         # Start background tasks
         self.ping_task = None
         self.cleanup_task = None
+
+        # --- Redis pub/sub backplane (optional, for horizontal scaling) ---
+        # When active, broadcast_* methods publish to Redis instead of looping
+        # local connections; a background subscriber fans received messages out
+        # to the connections living on THIS process.
+        self._redis_enabled: bool = False
+        self._redis_url: str = ""
+        self._publisher: Optional["AsyncRedis"] = None
+        self._subscriber_task: Optional[asyncio.Task] = None
+        self._stopping: bool = True
+
+    # ------------------------------------------------------------------
+    # Backplane configuration / lifecycle
+    # ------------------------------------------------------------------
+    def configure(self, redis_url: str, enabled: bool) -> None:
+        """Configure the Redis pub/sub backplane.
+
+        Safe to call at any time. The backplane only becomes active once
+        ``start_redis_backplane`` connects successfully. When ``enabled`` is
+        False or the ``redis`` package is missing the manager stays in
+        single-instance mode.
+        """
+        self._redis_url = redis_url or ""
+        self._redis_enabled = bool(enabled and REDIS_AVAILABLE)
+        if enabled and not REDIS_AVAILABLE:
+            websocket_logger.warning(
+                "WebSocket Redis backplane requested but the 'redis' package "
+                "is not installed; falling back to single-instance mode."
+            )
+
+    def _is_backplane_active(self) -> bool:
+        """True when broadcasts should be published to Redis."""
+        return self._redis_enabled and self._publisher is not None and not self._stopping
+
+    async def start_redis_backplane(self) -> None:
+        """Open the publisher connection and start the subscriber loop.
+
+        Failures are logged and swallowed so application startup never crashes
+        when Redis is unavailable; the manager simply runs in local mode.
+        """
+        if not self._redis_enabled:
+            return
+
+        self._stopping = False
+        try:
+            self._publisher = aioredis.from_url(
+                self._redis_url, decode_responses=False
+            )
+            await self._publisher.ping()
+            websocket_logger.info(
+                "WebSocket Redis backplane publisher connected to %s",
+                self._redis_url,
+            )
+        except Exception as exc:
+            websocket_logger.error(
+                "WebSocket Redis backplane publisher failed to connect "
+                "(falling back to single-instance mode): %s",
+                exc,
+            )
+            await self._close_publisher()
+            self._stopping = True
+            return
+
+        # Subscriber loop runs independently and reconnects with backoff.
+        self._subscriber_task = asyncio.create_task(
+            self._subscriber_loop(), name="ws_redis_subscriber"
+        )
+
+    async def stop_redis_backplane(self) -> None:
+        """Stop the subscriber loop and close Redis connections."""
+        self._stopping = True
+        task = self._subscriber_task
+        self._subscriber_task = None
+        if task is not None:
+            task.cancel()
+            try:
+                await task
+            except (asyncio.CancelledError, Exception):
+                pass
+        await self._close_publisher()
+        websocket_logger.info("WebSocket Redis backplane stopped")
+
+    async def _close_publisher(self) -> None:
+        if self._publisher is not None:
+            try:
+                await self._publisher.aclose()
+            except Exception:
+                pass
+            self._publisher = None
+
+    # ------------------------------------------------------------------
+    # Subscriber (receiving cross-instance broadcasts)
+    # ------------------------------------------------------------------
+    async def _subscriber_loop(self) -> None:
+        """Consume broadcast messages from Redis and fan them out locally.
+
+        Reconnects with exponential backoff so a transient Redis outage does
+        not permanently disable cross-instance delivery.
+        """
+        backoff = 1.0
+        max_backoff = 30.0
+        while not self._stopping:
+            sub_redis = None
+            pubsub = None
+            try:
+                sub_redis = aioredis.from_url(self._redis_url, decode_responses=False)
+                await sub_redis.ping()
+                pubsub = sub_redis.pubsub()
+                await pubsub.subscribe(_WS_BROADCAST_CHANNEL)
+                backoff = 1.0  # reset after a successful connection
+                websocket_logger.info(
+                    "WebSocket Redis subscriber connected to channel '%s'",
+                    _WS_BROADCAST_CHANNEL,
+                )
+                async for raw in pubsub.listen():
+                    if self._stopping:
+                        break
+                    if raw.get("type") != "message":
+                        continue
+                    await self._handle_redis_message(raw.get("data"))
+            except asyncio.CancelledError:
+                break
+            except Exception as exc:
+                if not self._stopping:
+                    websocket_logger.warning(
+                        "WebSocket Redis subscriber error (will retry in "
+                        "%.1fs): %s",
+                        backoff,
+                        exc,
+                    )
+            finally:
+                if pubsub is not None:
+                    try:
+                        await pubsub.unsubscribe(_WS_BROADCAST_CHANNEL)
+                        await pubsub.aclose()
+                    except Exception:
+                        pass
+                if sub_redis is not None:
+                    try:
+                        await sub_redis.aclose()
+                    except Exception:
+                        pass
+
+            if self._stopping:
+                break
+            await asyncio.sleep(backoff)
+            backoff = min(backoff * 2, max_backoff)
+
+    async def _handle_redis_message(self, raw: Any) -> None:
+        """Deserialize a Redis broadcast envelope and fan out locally."""
+        try:
+            if isinstance(raw, (bytes, bytearray)):
+                raw = raw.decode("utf-8")
+            envelope = json.loads(raw)
+            method = envelope.get("method")
+            message = WebSocketMessage(**envelope.get("message", {}))
+            exclude = envelope.get("exclude_connection")
+
+            if method == "broadcast_to_all":
+                await self._local_broadcast_to_all(message, exclude)
+            elif method == "broadcast_to_channel":
+                await self._local_broadcast_to_channel(
+                    envelope.get("channel", ""), message, exclude
+                )
+            elif method == "broadcast_to_room":
+                await self._local_broadcast_to_room(
+                    envelope.get("room_id", ""), message, exclude
+                )
+            elif method == "send_to_user":
+                await self._local_send_to_user(envelope.get("user_id", ""), message)
+            else:
+                websocket_logger.warning(
+                    "Unknown WebSocket broadcast method from Redis: %s", method
+                )
+        except Exception as exc:
+            websocket_logger.error("Failed to handle Redis broadcast message: %s", exc)
+
+    # ------------------------------------------------------------------
+    # Publisher (sending broadcasts cross-instance)
+    # ------------------------------------------------------------------
+    async def _publish_broadcast(
+        self,
+        method: str,
+        message: WebSocketMessage,
+        *,
+        channel: str = None,
+        room_id: str = None,
+        user_id: str = None,
+        exclude_connection: str = None,
+    ) -> None:
+        """Publish a broadcast envelope to Redis.
+
+        If publishing fails the caller falls back to local fan-out so at least
+        the connections on this instance still receive the message.
+        """
+        envelope: Dict[str, Any] = {
+            "method": method,
+            "message": message.model_dump(mode="json"),
+        }
+        if channel is not None:
+            envelope["channel"] = channel
+        if room_id is not None:
+            envelope["room_id"] = room_id
+        if user_id is not None:
+            envelope["user_id"] = user_id
+        if exclude_connection is not None:
+            envelope["exclude_connection"] = exclude_connection
+
+        try:
+            await self._publisher.publish(
+                _WS_BROADCAST_CHANNEL, json.dumps(envelope)
+            )
+        except Exception as exc:
+            websocket_logger.warning(
+                "Redis publish failed, falling back to local delivery: %s", exc
+            )
+            # Drop the stale publisher so _is_backplane_active() returns False
+            # and subsequent broadcasts go local until reconnect.
+            await self._close_publisher()
+            raise
     
     async def connect(self, websocket: WebSocket) -> str:
         """Accept new WebSocket connection"""
@@ -294,51 +532,107 @@ class WebSocketManager:
         return False
     
     async def send_to_user(self, user_id: str, message: WebSocketMessage):
-        """Send message to all connections of a user"""
+        """Send message to all connections of a user across all instances."""
+        if self._is_backplane_active():
+            try:
+                await self._publish_broadcast(
+                    "send_to_user", message, user_id=user_id
+                )
+                return True
+            except Exception:
+                pass  # publish failed -> fall through to local delivery
+        return await self._local_send_to_user(user_id, message)
+
+    async def _local_send_to_user(self, user_id: str, message: WebSocketMessage):
+        """Send message to all LOCAL connections of a user."""
         if user_id in self.user_connections:
             tasks = []
             for connection_id in self.user_connections[user_id]:
                 if connection_id in self.connections:
                     tasks.append(self.connections[connection_id].send_message(message))
-            
+
             if tasks:
                 await asyncio.gather(*tasks, return_exceptions=True)
                 return True
         return False
     
     async def broadcast_to_channel(self, channel: str, message: WebSocketMessage, exclude_connection: str = None):
-        """Broadcast message to all subscribers of a channel"""
+        """Broadcast message to all subscribers of a channel across all instances."""
+        if self._is_backplane_active():
+            try:
+                await self._publish_broadcast(
+                    "broadcast_to_channel",
+                    message,
+                    channel=channel,
+                    exclude_connection=exclude_connection,
+                )
+                return 1
+            except Exception:
+                pass  # publish failed -> fall through to local delivery
+        return await self._local_broadcast_to_channel(channel, message, exclude_connection)
+
+    async def _local_broadcast_to_channel(self, channel: str, message: WebSocketMessage, exclude_connection: str = None):
+        """Broadcast message to LOCAL subscribers of a channel."""
         if channel in self.subscriptions:
             tasks = []
             for connection_id in self.subscriptions[channel]:
                 if connection_id != exclude_connection and connection_id in self.connections:
                     tasks.append(self.connections[connection_id].send_message(message))
-            
+
             if tasks:
                 await asyncio.gather(*tasks, return_exceptions=True)
                 return len(tasks)
         return 0
     
     async def broadcast_to_room(self, room_id: str, message: WebSocketMessage, exclude_connection: str = None):
-        """Broadcast message to all connections in a room"""
+        """Broadcast message to all connections in a room across all instances."""
+        if self._is_backplane_active():
+            try:
+                await self._publish_broadcast(
+                    "broadcast_to_room",
+                    message,
+                    room_id=room_id,
+                    exclude_connection=exclude_connection,
+                )
+                return 1
+            except Exception:
+                pass  # publish failed -> fall through to local delivery
+        return await self._local_broadcast_to_room(room_id, message, exclude_connection)
+
+    async def _local_broadcast_to_room(self, room_id: str, message: WebSocketMessage, exclude_connection: str = None):
+        """Broadcast message to LOCAL connections in a room."""
         if room_id in self.rooms:
             tasks = []
             for connection_id in self.rooms[room_id]:
                 if connection_id != exclude_connection and connection_id in self.connections:
                     tasks.append(self.connections[connection_id].send_message(message))
-            
+
             if tasks:
                 await asyncio.gather(*tasks, return_exceptions=True)
                 return len(tasks)
         return 0
     
     async def broadcast_to_all(self, message: WebSocketMessage, exclude_connection: str = None):
-        """Broadcast message to all connections"""
+        """Broadcast message to all connections across all instances."""
+        if self._is_backplane_active():
+            try:
+                await self._publish_broadcast(
+                    "broadcast_to_all",
+                    message,
+                    exclude_connection=exclude_connection,
+                )
+                return 1
+            except Exception:
+                pass  # publish failed -> fall through to local delivery
+        return await self._local_broadcast_to_all(message, exclude_connection)
+
+    async def _local_broadcast_to_all(self, message: WebSocketMessage, exclude_connection: str = None):
+        """Broadcast message to all LOCAL connections."""
         tasks = []
         for connection_id, connection in self.connections.items():
             if connection_id != exclude_connection:
                 tasks.append(connection.send_message(message))
-        
+
         if tasks:
             await asyncio.gather(*tasks, return_exceptions=True)
             return len(tasks)

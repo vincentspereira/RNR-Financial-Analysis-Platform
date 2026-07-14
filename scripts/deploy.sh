@@ -183,13 +183,18 @@ setup_nodejs_environment() {
     log_info "Setting up Node.js environment..."
     
     cd /opt/rnr-financial-analysis/frontend
-    
-    # Install dependencies
-    npm ci --production
-    
+
+    # Install ALL dependencies first — Vite/TypeScript are devDependencies and
+    # are required for the build. (`npm ci --production` is deprecated and would
+    # strip them before `npm run build`, breaking the build.)
+    npm ci
+
     # Build application
     npm run build
-    
+
+    # Prune to production-only dependencies for the served image
+    npm prune --production
+
     log_success "Node.js environment setup complete"
 }
 

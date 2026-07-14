@@ -4,7 +4,7 @@ Analytics API endpoints for ML-powered financial analysis
 from typing import Dict, List, Optional, Any
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.services.analytics.ml_service import ml_service, ModelType, PredictionType
 from app.core.logging import get_logger
@@ -16,12 +16,16 @@ analytics_logger = get_logger("analytics.api")
 
 # Request/Response Models
 class StockPredictionRequest(BaseModel):
+    # `model_type` intentionally shadows pydantic's protected "model_" namespace.
+    model_config = ConfigDict(protected_namespaces=())
     symbol: str = Field(..., description="Stock symbol to predict")
     days_ahead: int = Field(30, ge=1, le=365, description="Number of days to predict ahead")
     model_type: ModelType = Field(ModelType.RANDOM_FOREST, description="ML model type to use")
 
 
 class StockPredictionResponse(BaseModel):
+    # `model_used` intentionally shadows pydantic's protected "model_" namespace.
+    model_config = ConfigDict(protected_namespaces=())
     symbol: str
     predicted_price: float
     confidence_score: float
@@ -434,6 +438,8 @@ from datetime import timedelta
 # ---------------------------------------------------------------------------
 
 class DeepLearningPredictRequest(BaseModel):
+    # `model_type` intentionally shadows pydantic's protected "model_" namespace.
+    model_config = ConfigDict(protected_namespaces=())
     symbol: str = Field(..., description="Stock symbol")
     days_ahead: int = Field(5, ge=1, le=90, description="Days to predict")
     model_type: str = Field("lstm", description="Model: lstm, gru, attention_lstm")

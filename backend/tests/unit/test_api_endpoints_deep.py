@@ -90,7 +90,7 @@ def client(auth_headers) -> TestClient:
 class TestTechnicalAnalysisEndpoints:
     def test_indicators_list(self, client):
         response = client.get("/api/v1/analysis/technical/indicators")
-        assert response.status_code in (200, 405, 422, 500)
+        assert response.status_code in (200, 405, 422)
 
     def test_calculate_indicators(self, client):
         # Returns 500 or 422 depending on data fetch; we only need the route hit
@@ -98,21 +98,21 @@ class TestTechnicalAnalysisEndpoints:
             "/api/v1/analysis/technical/calculate",
             json={"symbol": "AAPL", "indicators": ["sma", "rsi"]},
         )
-        assert response.status_code in (200, 400, 422, 500)
+        assert response.status_code in (200, 400, 422)
 
     def test_summary(self, client):
         response = client.post(
             "/api/v1/analysis/technical/summary",
             json={"symbol": "AAPL"},
         )
-        assert response.status_code in (200, 400, 422, 500)
+        assert response.status_code in (200, 400, 422)
 
     def test_batch(self, client):
         response = client.post(
             "/api/v1/analysis/technical/batch",
             json={"symbols": ["AAPL", "MSFT"], "indicators": ["sma"]},
         )
-        assert response.status_code in (200, 400, 422, 500)
+        assert response.status_code in (200, 400, 422)
 
 
 # ===========================================================================
@@ -127,34 +127,34 @@ class TestPortfolioOptimizationEndpoints:
             "/api/v1/analysis/optimization/optimize",
             json={"symbols": ["AAPL", "MSFT"]},
         )
-        assert response.status_code in (200, 400, 422, 500)
+        assert response.status_code in (200, 400, 422)
 
     def test_efficient_frontier(self, client):
         response = client.post(
             "/api/v1/analysis/optimization/efficient-frontier",
             json={"symbols": ["AAPL", "MSFT", "GOOG"]},
         )
-        assert response.status_code in (200, 400, 422, 500)
+        assert response.status_code in (200, 400, 422)
 
     def test_risk_analysis(self, client):
         response = client.post(
             "/api/v1/analysis/optimization/risk-analysis",
             json={"symbols": ["AAPL", "MSFT"]},
         )
-        assert response.status_code in (200, 400, 422, 500)
+        assert response.status_code in (200, 400, 422)
 
     def test_monte_carlo(self, client):
         response = client.post(
             "/api/v1/analysis/optimization/monte-carlo",
             json={"symbols": ["AAPL", "MSFT"]},
         )
-        assert response.status_code in (200, 400, 422, 500)
+        assert response.status_code in (200, 400, 422)
 
     def test_portfolio_metrics(self, client):
         response = client.get(
             f"/api/v1/analysis/optimization/portfolio-metrics/{uuid4()}"
         )
-        assert response.status_code in (200, 400, 404, 422, 500)
+        assert response.status_code in (200, 400, 404, 422)
 
 
 # ===========================================================================
@@ -166,7 +166,7 @@ class TestPortfolioOptimizationEndpoints:
 class TestBacktestingEndpoints:
     def test_list_strategies(self, client):
         response = client.get("/api/v1/backtesting/strategies")
-        assert response.status_code in (200, 401, 500)
+        assert response.status_code in (200, 401)
 
     # Note: /backtesting/run and /backtesting/compare are intentionally NOT
     # tested here because they invoke real market-data fetch which times out
@@ -186,18 +186,18 @@ class TestSentimentEndpoints:
             "/api/v1/sentiment/analyze",
             json={"text": "AAPL is bullish and surging"},
         )
-        assert response.status_code in (200, 400, 422, 500)
+        assert response.status_code in (200, 400, 422)
 
     # /sentiment/dashboard fetches real news; skipped to avoid network calls.
     # Underlying analyzer is tested in tests/unit/test_services_batch.py
 
     def test_news(self, client):
         response = client.get("/api/v1/sentiment/news/AAPL")
-        assert response.status_code in (200, 400, 422, 500)
+        assert response.status_code in (200, 400, 422)
 
     def test_keywords(self, client):
         response = client.get("/api/v1/sentiment/keywords")
-        assert response.status_code in (200, 400, 422, 500)
+        assert response.status_code in (200, 400, 422)
 
 
 # ===========================================================================
@@ -209,11 +209,11 @@ class TestSentimentEndpoints:
 class TestMarketDataEndpoints:
     def test_streamer_status(self, client):
         response = client.get("/api/v1/market-data/streamer/status")
-        assert response.status_code in (200, 401, 500)
+        assert response.status_code in (200, 401)
 
     def test_subscriptions(self, client):
         response = client.get("/api/v1/market-data/subscriptions")
-        assert response.status_code in (200, 401, 500)
+        assert response.status_code in (200, 401)
 
 
 # ===========================================================================
@@ -226,11 +226,11 @@ class TestBillingEndpoints:
     def test_list_plans(self, client):
         response = client.get("/api/v1/billing/plans")
         # Not authenticated path; status varies
-        assert response.status_code in (200, 401, 500)
+        assert response.status_code in (200, 401)
 
     def test_subscription_status(self, client):
         response = client.get("/api/v1/billing/subscription")
-        assert response.status_code in (200, 401, 404, 500)
+        assert response.status_code in (200, 401, 404)
 
 
 # ===========================================================================
@@ -242,9 +242,9 @@ class TestBillingEndpoints:
 class TestMonitoringEndpoints:
     def test_get_metrics(self, client):
         response = client.get("/api/v1/monitoring/metrics")
-        assert response.status_code in (200, 401, 403, 500)
+        assert response.status_code in (200, 401, 403)
 
     def test_health(self, client):
         response = client.get("/api/v1/monitoring/health")
         # 404 acceptable if no such monitoring/health subroute
-        assert response.status_code in (200, 401, 403, 404, 500)
+        assert response.status_code in (200, 401, 403, 404)

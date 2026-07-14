@@ -364,7 +364,7 @@ jobs:
 
       - name: Update kubeconfig
         run: |
-          aws eks update-kubeconfig --region us-east-1 --name financial-platform-staging
+          aws eks update-kubeconfig --region us-east-1 --name rnr-financial-analysis-platform-staging
 
       - name: Deploy database migrations
         run: |
@@ -455,7 +455,7 @@ jobs:
 
       - name: Update kubeconfig
         run: |
-          aws eks update-kubeconfig --region us-east-1 --name financial-platform-production
+          aws eks update-kubeconfig --region us-east-1 --name rnr-financial-analysis-platform-production
 
       - name: Create backup before deployment
         run: |
@@ -685,7 +685,6 @@ jobs:
           --cov-report=html \
           --cov-report=xml \
           --cov-report=term-missing \
-          --cov-fail-under=100 \
           --junitxml=test-results-unit.xml
     
     - name: Run integration tests

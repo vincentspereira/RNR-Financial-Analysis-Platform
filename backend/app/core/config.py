@@ -47,6 +47,15 @@ class Settings(BaseSettings):
     # Redis
     REDIS_URL: str = "redis://localhost:6379/0"
 
+    # WebSocket Redis pub/sub backplane for horizontal scaling.
+    # When enabled AND Redis is reachable, broadcasts are published to a Redis
+    # channel so that clients connected to OTHER backend replicas also receive
+    # them. When disabled or Redis is unavailable, the manager transparently
+    # falls back to single-instance in-process fan-out.
+    WEBSOCKET_REDIS_BACKPLANE_ENABLED: bool = (
+        os.getenv("WEBSOCKET_REDIS_BACKPLANE_ENABLED", "false").lower() == "true"
+    )
+
     # CORS - Secure defaults
     BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []
 
@@ -93,6 +102,13 @@ class Settings(BaseSettings):
     # Cache settings
     CACHE_EXPIRE_SECONDS: int = 3600
 
+    # ML model registry — persist trained models to disk so they are not
+    # retrained on every request or after every restart. See
+    # app/services/analytics/model_registry.py.
+    MODEL_CACHE_DIR: str = os.getenv("MODEL_CACHE_DIR", "data/models")
+    # Seconds before a cached model is considered stale and retrained (0 = never).
+    MODEL_CACHE_TTL_SECONDS: int = int(os.getenv("MODEL_CACHE_TTL_SECONDS", "86400"))
+
     # Task queue
     CELERY_BROKER_URL: str = "redis://localhost:6379/1"
     CELERY_RESULT_BACKEND: str = "redis://localhost:6379/2"
@@ -138,6 +154,14 @@ class Settings(BaseSettings):
     IBKR_ORDER_NOTIONAL_LIMIT_USD: float = float(
         os.getenv("IBKR_ORDER_NOTIONAL_LIMIT_USD", "100000")
     )
+
+    # ---------------------------------------------------------------------
+    # Sentry error tracking (optional — initializes only if SENTRY_DSN set)
+    # ---------------------------------------------------------------------
+    SENTRY_DSN: Optional[str] = os.getenv("SENTRY_DSN")
+    SENTRY_ENVIRONMENT: str = os.getenv("SENTRY_ENVIRONMENT", "development")
+    # Performance tracing sample rate (0.0 = off, 1.0 = all). Keep low in prod.
+    SENTRY_TRACES_SAMPLE_RATE: float = float(os.getenv("SENTRY_TRACES_SAMPLE_RATE", "0.0"))
 
 
 # Create global settings instance

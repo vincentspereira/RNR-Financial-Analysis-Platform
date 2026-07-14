@@ -1,0 +1,66 @@
+# Staging backend deployment.
+# NOTE: secrets are NOT inlined here (unlike the production manifests). Reference
+# them by name from your secret manager (SealedSecrets / ExternalSecrets / Vault).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-deployment
+  namespace: staging
+  labels:
+    app.kubernetes.io/name: rnr-financial-analysis-platform
+    app.kubernetes.io/component: backend
+    app.kubernetes.io/environment: staging
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: rnr-financial-analysis-platform
+      app.kubernetes.io/component: backend
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: rnr-financial-analysis-platform
+        app.kubernetes.io/component: backend
+        app.kubernetes.io/environment: staging
+    spec:
+      containers:
+        - name: backend
+          image: ghcr.io/rnr-financial-analysis-platform/backend:staging
+          imagePullPolicy: Always
+          ports:
+            - name: http-api
+              containerPort: 8000
+          env:
+            - name: ENVIRONMENT
+              value: staging
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: rnr-financial-analysis-platform-staging-secrets
+                  key: database-url
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: rnr-financial-analysis-platform-staging-secrets
+                  key: secret-key
+            - name: REDIS_URL
+              value: redis://redis:6379/0
+          readinessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: http-api
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: http-api
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"

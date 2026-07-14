@@ -1,0 +1,35 @@
+# Staging namespace + internal Services.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: staging
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  namespace: staging
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: rnr-financial-analysis-platform
+    app.kubernetes.io/component: backend
+  ports:
+    - name: http-api
+      port: 8000
+      targetPort: http-api
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: staging
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: rnr-financial-analysis-platform
+    app.kubernetes.io/component: frontend
+  ports:
+    - name: http-web
+      port: 80
+      targetPort: http-web

@@ -246,44 +246,25 @@ metadata:
     name: production
     environment: production
 
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: database-secret
-  namespace: production
-type: Opaque
-stringData:
-  url: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@postgres-service:5432/financial_analysis"
-  host: "postgres-service"
-  port: "5432"
-  database: "financial_analysis"
-  username: "$(POSTGRES_USER)"
-  password: "$(POSTGRES_PASSWORD)"
-
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: redis-secret
-  namespace: production
-type: Opaque
-stringData:
-  url: "redis://:$(REDIS_PASSWORD)@redis-service:6379/0"
-  host: "redis-service"
-  port: "6379"
-  password: "$(REDIS_PASSWORD)"
-
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: app-secret
-  namespace: production
-type: Opaque
-stringData:
-  secret-key: "$(SECRET_KEY)"
-  jwt-secret-key: "$(JWT_SECRET_KEY)"
+# ---------------------------------------------------------------------------
+# Secrets are NOT committed in this manifest. The Deployments above reference
+# them by name (database-secret, redis-secret, app-secret) via secretKeyRef, so
+# provision them out-of-band BEFORE applying, e.g.:
+#
+#   kubectl create secret generic database-secret -n production \
+#     --from-literal=url='postgresql://USER:PASS@postgres-service:5432/financial_analysis' \
+#     --from-literal=username=USER --from-literal=password=PASS
+#   kubectl create secret generic redis-secret -n production \
+#     --from-literal=url='redis://:PASS@redis-service:6379/0' --from-literal=password=PASS
+#   kubectl create secret generic app-secret -n production \
+#     --from-literal=secret-key=CHANGE_ME --from-literal=jwt-secret-key=CHANGE_ME
+#
+# or via SealedSecrets / ExternalSecrets / Vault. NEVER commit real Secret
+# values. Required keys per secret:
+#   database-secret: url, host, port, database, username, password
+#   redis-secret:    url, host, port, password
+#   app-secret:      secret-key, jwt-secret-key
+# ---------------------------------------------------------------------------
 
 ---
 apiVersion: autoscaling/v2

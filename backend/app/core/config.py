@@ -71,6 +71,11 @@ class Settings(BaseSettings):
     # External APIs - Use environment variables
     ALPHA_VANTAGE_API_KEY: Optional[str] = os.getenv("ALPHA_VANTAGE_API_KEY")
     FINANCIAL_MODELING_PREP_API_KEY: Optional[str] = os.getenv("FINANCIAL_MODELING_PREP_API_KEY")
+    # yfinance (Yahoo) fetches data from Yahoo Finance, whose Terms of Service
+    # prohibit commercial use. Keep this True for local/research use, but set
+    # YFINANCE_ENABLED=false in production / any MAS-regulated deployment and
+    # rely on the licensed sources above instead. See data_ingestion_service.
+    YFINANCE_ENABLED: bool = os.getenv("YFINANCE_ENABLED", "true").lower() == "true"
 
     # Market Data Streaming
     POLYGON_API_KEY: Optional[str] = os.getenv("POLYGON_API_KEY")

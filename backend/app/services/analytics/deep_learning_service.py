@@ -128,6 +128,16 @@ class DeepLearningService:
     """Deep learning service for financial prediction."""
 
     def __init__(self):
+        # NOTE on model caching (open item): _train_and_predict_sync currently
+        # retrains on every call — self.models is write-only. Unlike the sklearn
+        # ML service, a naive model_registry cache here would be INCORRECT
+        # because the model is trained against per-call normalization
+        # (mean/std of price_history). The correct design: persist the model
+        # TOGETHER with its (mean, std) via model_registry.save(key, model,
+        # (mean, std), metadata), and on a cache hit re-normalize the new input
+        # with the STORED (mean, std) before predicting (the standard
+        # deploy-a-model-with-its-scaler pattern). Untested on the torch path
+        # here (torch is optional); implement behind TORCH_AVAILABLE + a test.
         self.models: Dict[str, Any] = {}
         self.scalers: Dict[str, Any] = {}
         self.model_metadata: Dict[str, Dict[str, Any]] = {}

@@ -10,6 +10,7 @@ from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_async_session
+from app.core.config import settings
 from app.models.audit import AuditLog
 from app.models.company import Company, FinancialStatement, MarketData
 from app.models.financial_data import DataSource, DataUpdate, ExternalApiLog
@@ -89,13 +90,16 @@ class DataIngestionService:
                 results['sources_used'].append('alpha_vantage')
                 results['data_ingested']['alpha_vantage'] = av_success
 
-            # Ingest from Yahoo Finance
-            yf_success = await self._ingest_yahoo_finance_data(
-                symbol, company.id, db, data_update.id
-            )
-            if yf_success:
-                results['sources_used'].append('yahoo_finance')
-                results['data_ingested']['yahoo_finance'] = yf_success
+            # Ingest from Yahoo Finance (gated — Yahoo TOS prohibits commercial
+            # use; disable via YFINANCE_ENABLED=false in production / MAS paths).
+            yf_success = False
+            if settings.YFINANCE_ENABLED:
+                yf_success = await self._ingest_yahoo_finance_data(
+                    symbol, company.id, db, data_update.id
+                )
+                if yf_success:
+                    results['sources_used'].append('yahoo_finance')
+                    results['data_ingested']['yahoo_finance'] = yf_success
 
             # Update data update record
             data_update.status = 'completed' if (av_success or yf_success) else 'failed'

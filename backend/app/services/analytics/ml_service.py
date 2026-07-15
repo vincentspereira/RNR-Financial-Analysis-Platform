@@ -13,6 +13,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from app.core.logging import get_logger
 from app.core.monitoring import metrics_collector
+from app.core.config import settings
 from app.services.analytics.model_registry import model_registry
 
 # Try to import ML libraries with fallbacks
@@ -308,7 +309,7 @@ class FinancialMLService:
     async def _get_historical_data(self, symbol: str, period: str = "2y") -> Optional[pd.DataFrame]:
         """Get historical stock data"""
         try:
-            if YFINANCE_AVAILABLE:
+            if YFINANCE_AVAILABLE and settings.YFINANCE_ENABLED:
                 # Run in thread pool to avoid blocking
                 loop = asyncio.get_event_loop()
                 ticker = yf.Ticker(symbol)

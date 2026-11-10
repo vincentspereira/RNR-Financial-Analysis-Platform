@@ -726,3 +726,5 @@ graphify-out/obsidian/
 
 # ML model cache (trained models persisted by app/services/analytics/model_registry.py)
 data/models/
+data/*.db-shm
+data/*.db-wal
